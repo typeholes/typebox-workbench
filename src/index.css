@@ -1,0 +1,149 @@
+@font-face {
+  font-family: 'conthrax';
+  src: url('./assets/fonts/font.ttf');
+}
+html,
+body {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #292d3e;
+}
+#container {
+  width: 100%;
+  height: 100%;
+}
+
+/** ----------------------------------------------------
+ App
+------------------------------------------------------ */
+.app {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.app > .header {
+  font-family: conthrax;
+  width: 100%;
+  height: 72px;
+  background-color: #25293a;
+  border-bottom: 1px solid #ffa500;
+}
+.app > .header h1,
+h2 {
+  margin: 0;
+  margin-left: 24px;
+  padding: 0;
+  height: 48px;
+  line-height: 48px;
+
+  color: #ffa500;
+}
+.app > .header p {
+  margin: 0;
+  margin-left: 24px;
+  padding: 0;
+  color: #aaa;
+  font-size: 0.8em;
+}
+.app > .body {
+  margin-top: 8px;
+  width: 100%;
+  height: calc(100% - 72px - 8px - 32px);
+}
+.app > .footer {
+  margin-top: 8px;
+  width: 100%;
+  height: 32px;
+  background-color: #25293a;
+  border-top: solid 1px #ffa500;
+}
+.app > .footer p {
+  font-family: conthrax;
+  font-size: 0.8em;
+  color: #aaa;
+  margin: 0;
+  padding: 0;
+  margin-left: 24px;
+  height: 32px;
+  line-height: 32px;
+}
+/** ----------------------------------------------------
+ Splitter
+------------------------------------------------------ */
+.splitter .gutter {
+  background: #25293a;
+  transition: background 0.25s ease-in;
+}
+.splitter .gutter:hover {
+  background: #3c425c;
+  transition: background 0.25s ease-in;
+  border: 1px solid #ffa500;
+  border-radius: 4px;
+}
+/** ----------------------------------------------------
+ Editor
+------------------------------------------------------ */
+.editor {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+.editor {
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+.editor .source-container {
+  width: 100%;
+  height: 100%;
+}
+.editor .source-container .source-editor {
+  width: 100%;
+  height: 100%;
+}
+.editor .target-container {
+  margin-left: 8px;
+  width: calc(100% - 8px);
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+.editor .target-container .target-editor {
+  width: calc(100% - 72px);
+  height: 100%;
+}
+.editor .target-container .target-controls {
+  margin-left: 12px;
+  width: 56px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.editor .target-container .target-controls .control {
+  width: 48px;
+  height: 48px;
+  user-select: none;
+  border-radius: 4px;
+  border: 1px solid #aaa;
+  background-color: #292d3e;
+  margin-bottom: 8px;
+}
+.editor .target-container .target-controls .control:nth-child(1) {
+  background-image: url('./assets/images/typebox-control.png');
+  background-size: 48px;
+}
+.editor .target-container .target-controls .control:nth-child(2) {
+  background-image: url('./assets/images/jsonschema-control.png');
+  background-size: 48px;
+}
+.editor .target-container .target-controls .control:hover {
+  cursor: pointer;
+}
+.editor .target-container .target-controls .control.selected {
+  background-color: #25293a;
+  border: 1px solid #ffa500;
+}
