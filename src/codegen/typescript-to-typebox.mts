@@ -49,7 +49,7 @@ namespace StringTemplateLiteral {
     return find(reference.getSourceFile())
   }
   function Dequote(value: string) {
-    const match = value.match(/^(['"])(.*)\1$/)
+    const match = value.match(/^(['"`])(.*)\1$/)
     return match ? match[2] : value
   }
   function Escape(value: string) {
