@@ -81,6 +81,9 @@ namespace StringTemplateLiteral {
   function* TemplateHead(node: ts.TemplateHead) {
     yield node.text
   }
+  function* TemplateMiddle(node: ts.TemplateMiddle) {
+    yield node.text
+  }
   function* TemplateTail(node: ts.TemplateTail) {
     yield node.text
   }
@@ -98,6 +101,8 @@ namespace StringTemplateLiteral {
       return yield* TypeAliasDeclaration(node)
     } else if (ts.isTemplateHead(node)) {
       return yield* TemplateHead(node)
+    } else if (ts.isTemplateMiddle(node)) {
+      return yield* TemplateMiddle(node)
     } else if (ts.isTemplateTail(node)) {
       return yield* TemplateTail(node)
     } else if (ts.isLiteralTypeNode(node)) {
