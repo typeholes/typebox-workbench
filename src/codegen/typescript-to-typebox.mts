@@ -29,6 +29,13 @@ THE SOFTWARE.
 import { Formatter } from './formatter.mjs'
 import * as ts from 'typescript'
 
+// -------------------------------------------------------------------------
+// [StringTemplateLiteral]
+//
+// Specialized code path for evaluating string template literals as regular
+// expressions. This is distinct from typical code paths which would
+// otherwise yield types of TSchema inside the generated regular expression.
+// -------------------------------------------------------------------------
 namespace StringTemplateLiteral {
   function DereferenceNode(reference: ts.TypeReferenceNode): ts.Node | undefined {
     function find(node: ts.Node): ts.Node | undefined {
@@ -119,6 +126,11 @@ namespace StringTemplateLiteral {
     yield `Type.String({ pattern: '^${buffer.join('')}\$' })`
   }
 }
+// -------------------------------------------------------------------------
+// [TypeScriptToTypeBox]
+//
+// The following are code generation paths for types of TSchema.
+// -------------------------------------------------------------------------
 /** Generates TypeBox types from TypeScript code */
 export namespace TypeScriptToTypeBox {
   // tracked for recursive types and used to associate This type references
@@ -213,6 +225,25 @@ export namespace TypeScriptToTypeBox {
     yield [enumType, '', type].join('\n')
     typeNames.add(node.name.getText())
   }
+  // Collects members on behalf of InterfaceDeclaration and TypeLiteralNode. This function may yield an object
+  // with additionalProperties if we find an indexer in the members set.
+  function CollectObjectMembers(members: ts.NodeArray<ts.TypeElement>): string {
+    const properties = members.filter((member) => !ts.isIndexSignatureDeclaration(member))
+    const indexers = members.filter((member) => ts.isIndexSignatureDeclaration(member))
+    const propertyCollect = properties.map((property) => Collect(property)).join(',\n')
+    const indexer = indexers.length > 0 ? Collect(indexers[indexers.length - 1]) : ''
+    if (properties.length === 0 && indexer.length > 0) {
+      return `{},\n{\nadditionalProperties: ${indexer}\n }`
+    } else if (properties.length > 0 && indexer.length > 0) {
+      return `{\n${propertyCollect}\n},\n{\nadditionalProperties: ${indexer}\n }`
+    } else {
+      return `{\n${propertyCollect}\n}`
+    }
+  }
+  function* TypeLiteralNode(node: ts.TypeLiteralNode): IterableIterator<string> {
+    const members = CollectObjectMembers(node.members)
+    yield* `Type.Object(${members})`
+  }
   function* InterfaceDeclaration(node: ts.InterfaceDeclaration): IterableIterator<string> {
     useImports = true
     const isRecursiveType = IsRecursiveType(node)
@@ -224,17 +255,17 @@ export namespace TypeScriptToTypeBox {
       const constraints = node.typeParameters.map((param) => `${Collect(param)} extends TSchema`).join(', ')
       const parameters = node.typeParameters.map((param) => `${Collect(param)}: ${Collect(param)}`).join(', ')
       const names = node.typeParameters.map((param) => `${Collect(param)}`).join(', ')
-      const members = node.members.map((member) => Collect(member)).join(',\n')
+      const members = CollectObjectMembers(node.members)
       const staticDeclaration = `${exports}type ${node.name.getText()}<${constraints}> = Static<ReturnType<typeof ${node.name.getText()}<${names}>>>`
-      const rawTypeExpression = IsRecursiveType(node) ? `Type.Recursive(This => Type.Object({\n${members}\n}))` : `Type.Object({\n${members}\n})`
+      const rawTypeExpression = IsRecursiveType(node) ? `Type.Recursive(This => Type.Object(${members}))` : `Type.Object(${members})`
       const typeExpression = heritage.length === 0 ? rawTypeExpression : `Type.Intersect([${heritage.join(', ')}, ${rawTypeExpression}])`
       const typeDeclaration = `${exports}const ${node.name.getText()} = <${constraints}>(${parameters}) => ${typeExpression}`
       yield `${staticDeclaration}\n${typeDeclaration}`
     } else {
       const exports = IsExport(node) ? 'export ' : ''
-      const members = node.members.map((member) => Collect(member)).join(',\n')
+      const members = CollectObjectMembers(node.members)
       const staticDeclaration = `${exports}type ${node.name.getText()} = Static<typeof ${node.name.getText()}>`
-      const rawTypeExpression = IsRecursiveType(node) ? `Type.Recursive(This => Type.Object({\n${members}\n}))` : `Type.Object({\n${members}\n})`
+      const rawTypeExpression = IsRecursiveType(node) ? `Type.Recursive(This => Type.Object(${members}))` : `Type.Object(${members})`
       const typeExpression = heritage.length === 0 ? rawTypeExpression : `Type.Intersect([${heritage.join(', ')}, ${rawTypeExpression}])`
       const typeDeclaration = `${exports}const ${node.name.getText()} = ${typeExpression}`
       yield `${staticDeclaration}\n${typeDeclaration}`
@@ -342,20 +373,6 @@ export namespace TypeScriptToTypeBox {
       return yield `Type.Never(/* Unsupported Type '${name}' */)`
     } else {
       return yield `${name}${args}`
-    }
-  }
-  function* TypeLiteralNode(node: ts.TypeLiteralNode): IterableIterator<string> {
-    const properties = node.members.filter((member) => !ts.isIndexSignatureDeclaration(member))
-    const indexers = node.members.filter((member) => ts.isIndexSignatureDeclaration(member))
-    const propertyCollect = properties.map((property) => Collect(property)).join(',\n')
-    // note: we must take the last indexer as additionalProperties can only accept one.
-    const indexer = indexers.length > 0 ? Collect(indexers[indexers.length - 1]) : ''
-    if (properties.length === 0 && indexer.length > 0) {
-      return yield `Type.Object({},\n{\nadditionalProperties: ${indexer}\n })`
-    } else if (properties.length > 0 && indexer.length > 0) {
-      return yield `Type.Object({\n${propertyCollect}\n},\n{\nadditionalProperties: ${indexer}\n })`
-    } else {
-      return yield `Type.Object({\n${propertyCollect}\n})`
     }
   }
   function* LiteralTypeNode(node: ts.LiteralTypeNode): IterableIterator<string> {
