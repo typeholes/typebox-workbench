@@ -1,17 +1,44 @@
-import { TypeScriptToJsonSchema, TypeScriptToTypeBox } from '../codegen/index.mjs'
+/*--------------------------------------------------------------------------
+
+@sinclair/typebox/workbench
+
+The MIT License (MIT)
+
+Copyright (c) 2023 Haydn Paterson (sinclair) <haydn.developer@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+---------------------------------------------------------------------------*/
+
+import * as Codegen from '../codegen/index'
+import { Formatter } from '../codegen/common/index'
 import { Monaco } from '../monaco/index.mjs'
-import { Storage } from '../storage/index.mjs'
+import { Storage, TransformType } from '../storage/index.mjs'
 import { Debounce } from '../async/index.mjs'
 import { Share } from '../share/index.mjs'
 import * as Layouts from '../layout/index.js'
 import * as monaco from 'monaco-editor'
-
 import * as React from 'react'
 
 export interface EditorProperties {
   code?: string
 }
-
 export function Editor(props: EditorProperties) {
   const [state, setState] = React.useState(Storage.getTransformTargetType())
   const { current: debounce } = React.useRef(new Debounce(500, true))
@@ -26,7 +53,7 @@ export function Editor(props: EditorProperties) {
   function setupEditors() {
     setupSourceEditor()
     setupTargetEditor()
-    transformCode()
+    updateTransform()
   }
   function disposeEditors() {
     disposeSourceEditor()
@@ -38,9 +65,9 @@ export function Editor(props: EditorProperties) {
     const editor = Monaco.create(sourceEditorRef.current, code, (content) => {
       Share.set(content)
       Storage.setTransformSourceCode(content)
-      transformCode()
+      updateTransform()
     })
-    editor.onKeyUp(() => debounce.run(() => transformCode()))
+    editor.onKeyUp(() => debounce.run(() => updateTransform()))
     sourceEditor.current = editor
   }
   function setupTargetEditor() {
@@ -56,24 +83,88 @@ export function Editor(props: EditorProperties) {
     if (targetEditor.current === null) return
     targetEditor.current.dispose()
   }
-  function transformCode() {
-    if (sourceEditor.current === null || targetEditor.current === null) return
-    Storage.setTransformSourceCode(sourceEditor.current.getValue())
-    const transform = Storage.getTransformTargetType() === 'jsonschema' ? TypeScriptToJsonSchema.Generate(Storage.getTransformSourceCode()) : TypeScriptToTypeBox.Generate(Storage.getTransformSourceCode())
-    targetEditor.current.setValue(transform)
+  function buildTransform(type: TransformType, typescript: string): string {
+    const referenceModel = type === 'arktype' || type === 'jsonschema' ? 'cyclic' : 'inline'
+    const model = Codegen.TypeScriptToModel.Generate(typescript, referenceModel)
+    if (type === 'arktype') return Codegen.ModelToArkType.Generate(model)
+    if (type === 'iots') return Codegen.ModelToIoTs.Generate(model)
+    if (type === 'jsonschema') return Codegen.ModelToJsonSchema.Generate(model)
+    if (type === 'javascript') return Codegen.ModelToJavaScript.Generate(model)
+    if (type === 'typebox') return Codegen.TypeScriptToTypeBox.Generate(typescript)
+    if (type === 'typescript') return Codegen.ModelToTypeScript.Generate(model)
+    if (type === 'value') return Codegen.ModelToValue.Generate(model)
+    if (type === 'yup') return Codegen.ModelToYup.Generate(model)
+    if (type === 'zod') return Codegen.ModelToZod.Generate(model)
+    if (type === 'expr') return Codegen.ModelToExpr.Generate(model)
+    return ''
   }
-  function onTypeBoxTransform() {
-    Storage.setTransformTargetType('typebox')
-    transformCode()
-    setState('typebox')
+  function resolveTransform(type: TransformType, typescript: string): string {
+    try {
+      return Formatter.Format(buildTransform(type, typescript))
+    } catch (error) {
+      console.log(error)
+      // todo: better error reporting
+      const current = targetEditor.current!.getValue()
+      const updated = current.indexOf('// [transform-error]') === 0 ? current.split('\n').slice(1).join('\n') : current
+      const message = `// [transform-error]`
+      return [message, updated].join('\n')
+    }
   }
-  function onJsonSchemaTransform() {
-    Storage.setTransformTargetType('jsonschema')
-    transformCode()
-    setState('jsonschema')
+  function updateTransform() {
+    try {
+      if (sourceEditor.current === null || targetEditor.current === null) return
+      Storage.setTransformSourceCode(sourceEditor.current.getValue())
+      const target = Storage.getTransformTargetType()
+      const source = Storage.getTransformSourceCode()
+      const transform = resolveTransform(target, source)
+      targetEditor.current.setValue(transform)
+    } catch (error) {
+      console.log(error)
+    }
   }
-  const typeboxControlClassName = state === 'typebox' ? 'control selected' : 'control'
-  const jsonschemaControlClassName = state === 'jsonschema' ? 'control selected' : 'control'
+  function getTransformClassName(type: TransformType) {
+    return type === state ? `${type} control selected` : `${type} control`
+  }
+  function getTransformLabel(type: TransformType) {
+    switch (type) {
+      case 'arktype':
+        return 'ArkType'
+      case 'expr':
+        return 'Expr'
+      case 'iots':
+        return 'io-ts'
+      case 'javascript':
+        return 'JavaScript'
+      case 'jsonschema':
+        return 'Json Schema'
+      case 'value':
+        return 'Value'
+      case 'typebox':
+        return 'TypeBox'
+      case 'typescript':
+        return 'TypeScript'
+      case 'yup':
+        return 'Yup'
+      case 'zod':
+        return 'Zod'
+    }
+  }
+  const arktypeControlClassName = getTransformClassName('arktype')
+  const exprControlClassName = getTransformClassName('expr')
+  const iotsControlClassName = getTransformClassName('iots')
+  const jsonschemaControlClassName = getTransformClassName('jsonschema')
+  const javascriptControlClassName = getTransformClassName('javascript')
+  const typeboxControlClassName = getTransformClassName('typebox')
+  const typescriptControlClassName = getTransformClassName('typescript')
+  const valueControlClassName = getTransformClassName('value')
+  const yupControlClassName = getTransformClassName('yup')
+  const zodControlClassName = getTransformClassName('zod')
+
+  function onTransform(type: TransformType) {
+    Storage.setTransformTargetType(type)
+    updateTransform()
+    setState(type)
+  }
   return (
     <div className="editor">
       <Layouts.Splitter id="editor-seperator">
@@ -82,9 +173,20 @@ export function Editor(props: EditorProperties) {
         </div>
         <div className="target-container">
           <div className="target-controls">
-            <div className={typeboxControlClassName} title="TypeBox Transform" onClick={onTypeBoxTransform}></div>
-            <div className={jsonschemaControlClassName} title="JSON Schema Transform" onClick={onJsonSchemaTransform}></div>
+            <div className={typeboxControlClassName} title="TypeBox Transform" onClick={() => onTransform('typebox')}></div>
+            <div className={zodControlClassName} title="Zod Transform" onClick={() => onTransform('zod')}></div>
+            <div className={iotsControlClassName} title="Io-Ts Transform" onClick={() => onTransform('iots')}></div>
+            <div className={yupControlClassName} title="Yup Transform" onClick={() => onTransform('yup')}></div>
+            <div className={arktypeControlClassName} title="ArkType Transform" onClick={() => onTransform('arktype')}></div>
+            <div className="control separator" />
+            <div className={typescriptControlClassName} title="TypeScript Transform" onClick={() => onTransform('typescript')}></div>
+            <div className={javascriptControlClassName} title="JavaScript Transform" onClick={() => onTransform('javascript')}></div>
+            <div className="control separator" />
+            <div className={exprControlClassName} title="Expr Transform" onClick={() => onTransform('expr')}></div>
+            <div className={jsonschemaControlClassName} title="JSON Schema Transform" onClick={() => onTransform('jsonschema')}></div>
+            <div className={valueControlClassName} title="Value Transform" onClick={() => onTransform('value')}></div>
           </div>
+          <div className="target-name">{getTransformLabel(state)}</div>
           <div ref={targetEditorRef} className="target-editor"></div>
         </div>
       </Layouts.Splitter>

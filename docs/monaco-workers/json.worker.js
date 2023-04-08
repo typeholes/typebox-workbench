@@ -84,7 +84,6 @@
     constructor(message) {
       super(message || "An unexpected bug occurred.");
       Object.setPrototypeOf(this, BugIndicatingError.prototype);
-      debugger;
     }
   };
 
@@ -435,6 +434,11 @@
         (_a3 = this._store.get(key)) === null || _a3 === void 0 ? void 0 : _a3.dispose();
       }
       this._store.set(key, value);
+    }
+    deleteAndDispose(key) {
+      var _a3;
+      (_a3 = this._store.get(key)) === null || _a3 === void 0 ? void 0 : _a3.dispose();
+      this._store.delete(key);
     }
     [Symbol.iterator]() {
       return this._store[Symbol.iterator]();
@@ -1008,16 +1012,16 @@
     }
     Event2.runAndSubscribeWithStore = runAndSubscribeWithStore;
     class EmitterObserver {
-      constructor(obs, store) {
-        this.obs = obs;
+      constructor(_observable, store) {
+        this._observable = _observable;
         this._counter = 0;
         this._hasChanged = false;
         const options = {
           onWillAddFirstListener: () => {
-            obs.addObserver(this);
+            _observable.addObserver(this);
           },
           onDidRemoveLastListener: () => {
-            obs.removeObserver(this);
+            _observable.removeObserver(this);
           }
         };
         if (!store) {
@@ -1031,14 +1035,18 @@
       beginUpdate(_observable) {
         this._counter++;
       }
+      handlePossibleChange(_observable) {
+      }
       handleChange(_observable, _change) {
         this._hasChanged = true;
       }
       endUpdate(_observable) {
-        if (--this._counter === 0) {
+        this._counter--;
+        if (this._counter === 0) {
+          this._observable.reportChanges();
           if (this._hasChanged) {
             this._hasChanged = false;
-            this.emitter.fire(this.obs.get());
+            this.emitter.fire(this._observable.get());
           }
         }
       }
@@ -1048,6 +1056,39 @@
       return observer.emitter.event;
     }
     Event2.fromObservable = fromObservable;
+    function fromObservableLight(observable) {
+      return (listener) => {
+        let count = 0;
+        let didChange = false;
+        const observer = {
+          beginUpdate() {
+            count++;
+          },
+          endUpdate() {
+            count--;
+            if (count === 0) {
+              observable.reportChanges();
+              if (didChange) {
+                didChange = false;
+                listener();
+              }
+            }
+          },
+          handlePossibleChange() {
+          },
+          handleChange() {
+            didChange = true;
+          }
+        };
+        observable.addObserver(observer);
+        return {
+          dispose() {
+            observable.removeObserver(observer);
+          }
+        };
+      };
+    }
+    Event2.fromObservableLight = fromObservableLight;
   })(Event || (Event = {}));
   var EventProfiling = class {
     constructor(name) {
@@ -3908,9 +3949,8 @@
       }
       return new Uri("file", authority, path, _empty, _empty);
     }
-    static from(components) {
-      const result = new Uri(components.scheme, components.authority, components.path, components.query, components.fragment);
-      _validateUri(result, true);
+    static from(components, strict) {
+      const result = new Uri(components.scheme, components.authority, components.path, components.query, components.fragment, strict);
       return result;
     }
     static joinPath(uri, ...pathFragment) {
@@ -3932,14 +3972,15 @@
       return this;
     }
     static revive(data) {
+      var _a3, _b;
       if (!data) {
         return data;
       } else if (data instanceof URI) {
         return data;
       } else {
         const result = new Uri(data);
-        result._formatted = data.external;
-        result._fsPath = data._sep === _pathSepMarker ? data.fsPath : null;
+        result._formatted = (_a3 = data.external) !== null && _a3 !== void 0 ? _a3 : null;
+        result._fsPath = data._sep === _pathSepMarker ? (_b = data.fsPath) !== null && _b !== void 0 ? _b : null : null;
         return result;
       }
     }
@@ -5384,246 +5425,246 @@
   for (let i = 0; i <= 193; i++) {
     IMMUTABLE_CODE_TO_KEY_CODE[i] = -1;
   }
-  for (let i = 0; i <= 127; i++) {
+  for (let i = 0; i <= 132; i++) {
     IMMUTABLE_KEY_CODE_TO_CODE[i] = -1;
   }
   (function() {
     const empty = "";
     const mappings = [
-      [0, 1, 0, "None", 0, "unknown", 0, "VK_UNKNOWN", empty, empty],
-      [0, 1, 1, "Hyper", 0, empty, 0, empty, empty, empty],
-      [0, 1, 2, "Super", 0, empty, 0, empty, empty, empty],
-      [0, 1, 3, "Fn", 0, empty, 0, empty, empty, empty],
-      [0, 1, 4, "FnLock", 0, empty, 0, empty, empty, empty],
-      [0, 1, 5, "Suspend", 0, empty, 0, empty, empty, empty],
-      [0, 1, 6, "Resume", 0, empty, 0, empty, empty, empty],
-      [0, 1, 7, "Turbo", 0, empty, 0, empty, empty, empty],
-      [0, 1, 8, "Sleep", 0, empty, 0, "VK_SLEEP", empty, empty],
-      [0, 1, 9, "WakeUp", 0, empty, 0, empty, empty, empty],
-      [31, 0, 10, "KeyA", 31, "A", 65, "VK_A", empty, empty],
-      [32, 0, 11, "KeyB", 32, "B", 66, "VK_B", empty, empty],
-      [33, 0, 12, "KeyC", 33, "C", 67, "VK_C", empty, empty],
-      [34, 0, 13, "KeyD", 34, "D", 68, "VK_D", empty, empty],
-      [35, 0, 14, "KeyE", 35, "E", 69, "VK_E", empty, empty],
-      [36, 0, 15, "KeyF", 36, "F", 70, "VK_F", empty, empty],
-      [37, 0, 16, "KeyG", 37, "G", 71, "VK_G", empty, empty],
-      [38, 0, 17, "KeyH", 38, "H", 72, "VK_H", empty, empty],
-      [39, 0, 18, "KeyI", 39, "I", 73, "VK_I", empty, empty],
-      [40, 0, 19, "KeyJ", 40, "J", 74, "VK_J", empty, empty],
-      [41, 0, 20, "KeyK", 41, "K", 75, "VK_K", empty, empty],
-      [42, 0, 21, "KeyL", 42, "L", 76, "VK_L", empty, empty],
-      [43, 0, 22, "KeyM", 43, "M", 77, "VK_M", empty, empty],
-      [44, 0, 23, "KeyN", 44, "N", 78, "VK_N", empty, empty],
-      [45, 0, 24, "KeyO", 45, "O", 79, "VK_O", empty, empty],
-      [46, 0, 25, "KeyP", 46, "P", 80, "VK_P", empty, empty],
-      [47, 0, 26, "KeyQ", 47, "Q", 81, "VK_Q", empty, empty],
-      [48, 0, 27, "KeyR", 48, "R", 82, "VK_R", empty, empty],
-      [49, 0, 28, "KeyS", 49, "S", 83, "VK_S", empty, empty],
-      [50, 0, 29, "KeyT", 50, "T", 84, "VK_T", empty, empty],
-      [51, 0, 30, "KeyU", 51, "U", 85, "VK_U", empty, empty],
-      [52, 0, 31, "KeyV", 52, "V", 86, "VK_V", empty, empty],
-      [53, 0, 32, "KeyW", 53, "W", 87, "VK_W", empty, empty],
-      [54, 0, 33, "KeyX", 54, "X", 88, "VK_X", empty, empty],
-      [55, 0, 34, "KeyY", 55, "Y", 89, "VK_Y", empty, empty],
-      [56, 0, 35, "KeyZ", 56, "Z", 90, "VK_Z", empty, empty],
-      [22, 0, 36, "Digit1", 22, "1", 49, "VK_1", empty, empty],
-      [23, 0, 37, "Digit2", 23, "2", 50, "VK_2", empty, empty],
-      [24, 0, 38, "Digit3", 24, "3", 51, "VK_3", empty, empty],
-      [25, 0, 39, "Digit4", 25, "4", 52, "VK_4", empty, empty],
-      [26, 0, 40, "Digit5", 26, "5", 53, "VK_5", empty, empty],
-      [27, 0, 41, "Digit6", 27, "6", 54, "VK_6", empty, empty],
-      [28, 0, 42, "Digit7", 28, "7", 55, "VK_7", empty, empty],
-      [29, 0, 43, "Digit8", 29, "8", 56, "VK_8", empty, empty],
-      [30, 0, 44, "Digit9", 30, "9", 57, "VK_9", empty, empty],
-      [21, 0, 45, "Digit0", 21, "0", 48, "VK_0", empty, empty],
-      [3, 1, 46, "Enter", 3, "Enter", 13, "VK_RETURN", empty, empty],
-      [9, 1, 47, "Escape", 9, "Escape", 27, "VK_ESCAPE", empty, empty],
-      [1, 1, 48, "Backspace", 1, "Backspace", 8, "VK_BACK", empty, empty],
-      [2, 1, 49, "Tab", 2, "Tab", 9, "VK_TAB", empty, empty],
-      [10, 1, 50, "Space", 10, "Space", 32, "VK_SPACE", empty, empty],
-      [83, 0, 51, "Minus", 83, "-", 189, "VK_OEM_MINUS", "-", "OEM_MINUS"],
-      [81, 0, 52, "Equal", 81, "=", 187, "VK_OEM_PLUS", "=", "OEM_PLUS"],
-      [87, 0, 53, "BracketLeft", 87, "[", 219, "VK_OEM_4", "[", "OEM_4"],
-      [89, 0, 54, "BracketRight", 89, "]", 221, "VK_OEM_6", "]", "OEM_6"],
-      [88, 0, 55, "Backslash", 88, "\\", 220, "VK_OEM_5", "\\", "OEM_5"],
-      [0, 0, 56, "IntlHash", 0, empty, 0, empty, empty, empty],
-      [80, 0, 57, "Semicolon", 80, ";", 186, "VK_OEM_1", ";", "OEM_1"],
-      [90, 0, 58, "Quote", 90, "'", 222, "VK_OEM_7", "'", "OEM_7"],
-      [86, 0, 59, "Backquote", 86, "`", 192, "VK_OEM_3", "`", "OEM_3"],
-      [82, 0, 60, "Comma", 82, ",", 188, "VK_OEM_COMMA", ",", "OEM_COMMA"],
-      [84, 0, 61, "Period", 84, ".", 190, "VK_OEM_PERIOD", ".", "OEM_PERIOD"],
-      [85, 0, 62, "Slash", 85, "/", 191, "VK_OEM_2", "/", "OEM_2"],
-      [8, 1, 63, "CapsLock", 8, "CapsLock", 20, "VK_CAPITAL", empty, empty],
-      [59, 1, 64, "F1", 59, "F1", 112, "VK_F1", empty, empty],
-      [60, 1, 65, "F2", 60, "F2", 113, "VK_F2", empty, empty],
-      [61, 1, 66, "F3", 61, "F3", 114, "VK_F3", empty, empty],
-      [62, 1, 67, "F4", 62, "F4", 115, "VK_F4", empty, empty],
-      [63, 1, 68, "F5", 63, "F5", 116, "VK_F5", empty, empty],
-      [64, 1, 69, "F6", 64, "F6", 117, "VK_F6", empty, empty],
-      [65, 1, 70, "F7", 65, "F7", 118, "VK_F7", empty, empty],
-      [66, 1, 71, "F8", 66, "F8", 119, "VK_F8", empty, empty],
-      [67, 1, 72, "F9", 67, "F9", 120, "VK_F9", empty, empty],
-      [68, 1, 73, "F10", 68, "F10", 121, "VK_F10", empty, empty],
-      [69, 1, 74, "F11", 69, "F11", 122, "VK_F11", empty, empty],
-      [70, 1, 75, "F12", 70, "F12", 123, "VK_F12", empty, empty],
-      [0, 1, 76, "PrintScreen", 0, empty, 0, empty, empty, empty],
-      [79, 1, 77, "ScrollLock", 79, "ScrollLock", 145, "VK_SCROLL", empty, empty],
-      [7, 1, 78, "Pause", 7, "PauseBreak", 19, "VK_PAUSE", empty, empty],
-      [19, 1, 79, "Insert", 19, "Insert", 45, "VK_INSERT", empty, empty],
-      [14, 1, 80, "Home", 14, "Home", 36, "VK_HOME", empty, empty],
-      [11, 1, 81, "PageUp", 11, "PageUp", 33, "VK_PRIOR", empty, empty],
-      [20, 1, 82, "Delete", 20, "Delete", 46, "VK_DELETE", empty, empty],
-      [13, 1, 83, "End", 13, "End", 35, "VK_END", empty, empty],
-      [12, 1, 84, "PageDown", 12, "PageDown", 34, "VK_NEXT", empty, empty],
-      [17, 1, 85, "ArrowRight", 17, "RightArrow", 39, "VK_RIGHT", "Right", empty],
-      [15, 1, 86, "ArrowLeft", 15, "LeftArrow", 37, "VK_LEFT", "Left", empty],
-      [18, 1, 87, "ArrowDown", 18, "DownArrow", 40, "VK_DOWN", "Down", empty],
-      [16, 1, 88, "ArrowUp", 16, "UpArrow", 38, "VK_UP", "Up", empty],
-      [78, 1, 89, "NumLock", 78, "NumLock", 144, "VK_NUMLOCK", empty, empty],
-      [108, 1, 90, "NumpadDivide", 108, "NumPad_Divide", 111, "VK_DIVIDE", empty, empty],
-      [103, 1, 91, "NumpadMultiply", 103, "NumPad_Multiply", 106, "VK_MULTIPLY", empty, empty],
-      [106, 1, 92, "NumpadSubtract", 106, "NumPad_Subtract", 109, "VK_SUBTRACT", empty, empty],
-      [104, 1, 93, "NumpadAdd", 104, "NumPad_Add", 107, "VK_ADD", empty, empty],
-      [3, 1, 94, "NumpadEnter", 3, empty, 0, empty, empty, empty],
-      [94, 1, 95, "Numpad1", 94, "NumPad1", 97, "VK_NUMPAD1", empty, empty],
-      [95, 1, 96, "Numpad2", 95, "NumPad2", 98, "VK_NUMPAD2", empty, empty],
-      [96, 1, 97, "Numpad3", 96, "NumPad3", 99, "VK_NUMPAD3", empty, empty],
-      [97, 1, 98, "Numpad4", 97, "NumPad4", 100, "VK_NUMPAD4", empty, empty],
-      [98, 1, 99, "Numpad5", 98, "NumPad5", 101, "VK_NUMPAD5", empty, empty],
-      [99, 1, 100, "Numpad6", 99, "NumPad6", 102, "VK_NUMPAD6", empty, empty],
-      [100, 1, 101, "Numpad7", 100, "NumPad7", 103, "VK_NUMPAD7", empty, empty],
-      [101, 1, 102, "Numpad8", 101, "NumPad8", 104, "VK_NUMPAD8", empty, empty],
-      [102, 1, 103, "Numpad9", 102, "NumPad9", 105, "VK_NUMPAD9", empty, empty],
-      [93, 1, 104, "Numpad0", 93, "NumPad0", 96, "VK_NUMPAD0", empty, empty],
-      [107, 1, 105, "NumpadDecimal", 107, "NumPad_Decimal", 110, "VK_DECIMAL", empty, empty],
-      [92, 0, 106, "IntlBackslash", 92, "OEM_102", 226, "VK_OEM_102", empty, empty],
-      [58, 1, 107, "ContextMenu", 58, "ContextMenu", 93, empty, empty, empty],
-      [0, 1, 108, "Power", 0, empty, 0, empty, empty, empty],
-      [0, 1, 109, "NumpadEqual", 0, empty, 0, empty, empty, empty],
-      [71, 1, 110, "F13", 71, "F13", 124, "VK_F13", empty, empty],
-      [72, 1, 111, "F14", 72, "F14", 125, "VK_F14", empty, empty],
-      [73, 1, 112, "F15", 73, "F15", 126, "VK_F15", empty, empty],
-      [74, 1, 113, "F16", 74, "F16", 127, "VK_F16", empty, empty],
-      [75, 1, 114, "F17", 75, "F17", 128, "VK_F17", empty, empty],
-      [76, 1, 115, "F18", 76, "F18", 129, "VK_F18", empty, empty],
-      [77, 1, 116, "F19", 77, "F19", 130, "VK_F19", empty, empty],
-      [0, 1, 117, "F20", 0, empty, 0, "VK_F20", empty, empty],
-      [0, 1, 118, "F21", 0, empty, 0, "VK_F21", empty, empty],
-      [0, 1, 119, "F22", 0, empty, 0, "VK_F22", empty, empty],
-      [0, 1, 120, "F23", 0, empty, 0, "VK_F23", empty, empty],
-      [0, 1, 121, "F24", 0, empty, 0, "VK_F24", empty, empty],
-      [0, 1, 122, "Open", 0, empty, 0, empty, empty, empty],
-      [0, 1, 123, "Help", 0, empty, 0, empty, empty, empty],
-      [0, 1, 124, "Select", 0, empty, 0, empty, empty, empty],
-      [0, 1, 125, "Again", 0, empty, 0, empty, empty, empty],
-      [0, 1, 126, "Undo", 0, empty, 0, empty, empty, empty],
-      [0, 1, 127, "Cut", 0, empty, 0, empty, empty, empty],
-      [0, 1, 128, "Copy", 0, empty, 0, empty, empty, empty],
-      [0, 1, 129, "Paste", 0, empty, 0, empty, empty, empty],
-      [0, 1, 130, "Find", 0, empty, 0, empty, empty, empty],
-      [0, 1, 131, "AudioVolumeMute", 112, "AudioVolumeMute", 173, "VK_VOLUME_MUTE", empty, empty],
-      [0, 1, 132, "AudioVolumeUp", 113, "AudioVolumeUp", 175, "VK_VOLUME_UP", empty, empty],
-      [0, 1, 133, "AudioVolumeDown", 114, "AudioVolumeDown", 174, "VK_VOLUME_DOWN", empty, empty],
-      [105, 1, 134, "NumpadComma", 105, "NumPad_Separator", 108, "VK_SEPARATOR", empty, empty],
-      [110, 0, 135, "IntlRo", 110, "ABNT_C1", 193, "VK_ABNT_C1", empty, empty],
-      [0, 1, 136, "KanaMode", 0, empty, 0, empty, empty, empty],
-      [0, 0, 137, "IntlYen", 0, empty, 0, empty, empty, empty],
-      [0, 1, 138, "Convert", 0, empty, 0, empty, empty, empty],
-      [0, 1, 139, "NonConvert", 0, empty, 0, empty, empty, empty],
-      [0, 1, 140, "Lang1", 0, empty, 0, empty, empty, empty],
-      [0, 1, 141, "Lang2", 0, empty, 0, empty, empty, empty],
-      [0, 1, 142, "Lang3", 0, empty, 0, empty, empty, empty],
-      [0, 1, 143, "Lang4", 0, empty, 0, empty, empty, empty],
-      [0, 1, 144, "Lang5", 0, empty, 0, empty, empty, empty],
-      [0, 1, 145, "Abort", 0, empty, 0, empty, empty, empty],
-      [0, 1, 146, "Props", 0, empty, 0, empty, empty, empty],
-      [0, 1, 147, "NumpadParenLeft", 0, empty, 0, empty, empty, empty],
-      [0, 1, 148, "NumpadParenRight", 0, empty, 0, empty, empty, empty],
-      [0, 1, 149, "NumpadBackspace", 0, empty, 0, empty, empty, empty],
-      [0, 1, 150, "NumpadMemoryStore", 0, empty, 0, empty, empty, empty],
-      [0, 1, 151, "NumpadMemoryRecall", 0, empty, 0, empty, empty, empty],
-      [0, 1, 152, "NumpadMemoryClear", 0, empty, 0, empty, empty, empty],
-      [0, 1, 153, "NumpadMemoryAdd", 0, empty, 0, empty, empty, empty],
-      [0, 1, 154, "NumpadMemorySubtract", 0, empty, 0, empty, empty, empty],
-      [0, 1, 155, "NumpadClear", 126, "Clear", 12, "VK_CLEAR", empty, empty],
-      [0, 1, 156, "NumpadClearEntry", 0, empty, 0, empty, empty, empty],
-      [5, 1, 0, empty, 5, "Ctrl", 17, "VK_CONTROL", empty, empty],
-      [4, 1, 0, empty, 4, "Shift", 16, "VK_SHIFT", empty, empty],
-      [6, 1, 0, empty, 6, "Alt", 18, "VK_MENU", empty, empty],
-      [57, 1, 0, empty, 57, "Meta", 91, "VK_COMMAND", empty, empty],
-      [5, 1, 157, "ControlLeft", 5, empty, 0, "VK_LCONTROL", empty, empty],
-      [4, 1, 158, "ShiftLeft", 4, empty, 0, "VK_LSHIFT", empty, empty],
-      [6, 1, 159, "AltLeft", 6, empty, 0, "VK_LMENU", empty, empty],
-      [57, 1, 160, "MetaLeft", 57, empty, 0, "VK_LWIN", empty, empty],
-      [5, 1, 161, "ControlRight", 5, empty, 0, "VK_RCONTROL", empty, empty],
-      [4, 1, 162, "ShiftRight", 4, empty, 0, "VK_RSHIFT", empty, empty],
-      [6, 1, 163, "AltRight", 6, empty, 0, "VK_RMENU", empty, empty],
-      [57, 1, 164, "MetaRight", 57, empty, 0, "VK_RWIN", empty, empty],
-      [0, 1, 165, "BrightnessUp", 0, empty, 0, empty, empty, empty],
-      [0, 1, 166, "BrightnessDown", 0, empty, 0, empty, empty, empty],
-      [0, 1, 167, "MediaPlay", 0, empty, 0, empty, empty, empty],
-      [0, 1, 168, "MediaRecord", 0, empty, 0, empty, empty, empty],
-      [0, 1, 169, "MediaFastForward", 0, empty, 0, empty, empty, empty],
-      [0, 1, 170, "MediaRewind", 0, empty, 0, empty, empty, empty],
-      [114, 1, 171, "MediaTrackNext", 119, "MediaTrackNext", 176, "VK_MEDIA_NEXT_TRACK", empty, empty],
-      [115, 1, 172, "MediaTrackPrevious", 120, "MediaTrackPrevious", 177, "VK_MEDIA_PREV_TRACK", empty, empty],
-      [116, 1, 173, "MediaStop", 121, "MediaStop", 178, "VK_MEDIA_STOP", empty, empty],
-      [0, 1, 174, "Eject", 0, empty, 0, empty, empty, empty],
-      [117, 1, 175, "MediaPlayPause", 122, "MediaPlayPause", 179, "VK_MEDIA_PLAY_PAUSE", empty, empty],
-      [0, 1, 176, "MediaSelect", 123, "LaunchMediaPlayer", 181, "VK_MEDIA_LAUNCH_MEDIA_SELECT", empty, empty],
-      [0, 1, 177, "LaunchMail", 124, "LaunchMail", 180, "VK_MEDIA_LAUNCH_MAIL", empty, empty],
-      [0, 1, 178, "LaunchApp2", 125, "LaunchApp2", 183, "VK_MEDIA_LAUNCH_APP2", empty, empty],
-      [0, 1, 179, "LaunchApp1", 0, empty, 0, "VK_MEDIA_LAUNCH_APP1", empty, empty],
-      [0, 1, 180, "SelectTask", 0, empty, 0, empty, empty, empty],
-      [0, 1, 181, "LaunchScreenSaver", 0, empty, 0, empty, empty, empty],
-      [0, 1, 182, "BrowserSearch", 115, "BrowserSearch", 170, "VK_BROWSER_SEARCH", empty, empty],
-      [0, 1, 183, "BrowserHome", 116, "BrowserHome", 172, "VK_BROWSER_HOME", empty, empty],
-      [112, 1, 184, "BrowserBack", 117, "BrowserBack", 166, "VK_BROWSER_BACK", empty, empty],
-      [113, 1, 185, "BrowserForward", 118, "BrowserForward", 167, "VK_BROWSER_FORWARD", empty, empty],
-      [0, 1, 186, "BrowserStop", 0, empty, 0, "VK_BROWSER_STOP", empty, empty],
-      [0, 1, 187, "BrowserRefresh", 0, empty, 0, "VK_BROWSER_REFRESH", empty, empty],
-      [0, 1, 188, "BrowserFavorites", 0, empty, 0, "VK_BROWSER_FAVORITES", empty, empty],
-      [0, 1, 189, "ZoomToggle", 0, empty, 0, empty, empty, empty],
-      [0, 1, 190, "MailReply", 0, empty, 0, empty, empty, empty],
-      [0, 1, 191, "MailForward", 0, empty, 0, empty, empty, empty],
-      [0, 1, 192, "MailSend", 0, empty, 0, empty, empty, empty],
-      [109, 1, 0, empty, 109, "KeyInComposition", 229, empty, empty, empty],
-      [111, 1, 0, empty, 111, "ABNT_C2", 194, "VK_ABNT_C2", empty, empty],
-      [91, 1, 0, empty, 91, "OEM_8", 223, "VK_OEM_8", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_KANA", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_HANGUL", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_JUNJA", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_FINAL", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_HANJA", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_KANJI", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_CONVERT", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_NONCONVERT", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_ACCEPT", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_MODECHANGE", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_SELECT", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_PRINT", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_EXECUTE", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_SNAPSHOT", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_HELP", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_APPS", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_PROCESSKEY", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_PACKET", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_DBE_SBCSCHAR", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_DBE_DBCSCHAR", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_ATTN", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_CRSEL", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_EXSEL", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_EREOF", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_PLAY", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_ZOOM", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_NONAME", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_PA1", empty, empty],
-      [0, 1, 0, empty, 0, empty, 0, "VK_OEM_CLEAR", empty, empty]
+      [1, 0, "None", 0, "unknown", 0, "VK_UNKNOWN", empty, empty],
+      [1, 1, "Hyper", 0, empty, 0, empty, empty, empty],
+      [1, 2, "Super", 0, empty, 0, empty, empty, empty],
+      [1, 3, "Fn", 0, empty, 0, empty, empty, empty],
+      [1, 4, "FnLock", 0, empty, 0, empty, empty, empty],
+      [1, 5, "Suspend", 0, empty, 0, empty, empty, empty],
+      [1, 6, "Resume", 0, empty, 0, empty, empty, empty],
+      [1, 7, "Turbo", 0, empty, 0, empty, empty, empty],
+      [1, 8, "Sleep", 0, empty, 0, "VK_SLEEP", empty, empty],
+      [1, 9, "WakeUp", 0, empty, 0, empty, empty, empty],
+      [0, 10, "KeyA", 31, "A", 65, "VK_A", empty, empty],
+      [0, 11, "KeyB", 32, "B", 66, "VK_B", empty, empty],
+      [0, 12, "KeyC", 33, "C", 67, "VK_C", empty, empty],
+      [0, 13, "KeyD", 34, "D", 68, "VK_D", empty, empty],
+      [0, 14, "KeyE", 35, "E", 69, "VK_E", empty, empty],
+      [0, 15, "KeyF", 36, "F", 70, "VK_F", empty, empty],
+      [0, 16, "KeyG", 37, "G", 71, "VK_G", empty, empty],
+      [0, 17, "KeyH", 38, "H", 72, "VK_H", empty, empty],
+      [0, 18, "KeyI", 39, "I", 73, "VK_I", empty, empty],
+      [0, 19, "KeyJ", 40, "J", 74, "VK_J", empty, empty],
+      [0, 20, "KeyK", 41, "K", 75, "VK_K", empty, empty],
+      [0, 21, "KeyL", 42, "L", 76, "VK_L", empty, empty],
+      [0, 22, "KeyM", 43, "M", 77, "VK_M", empty, empty],
+      [0, 23, "KeyN", 44, "N", 78, "VK_N", empty, empty],
+      [0, 24, "KeyO", 45, "O", 79, "VK_O", empty, empty],
+      [0, 25, "KeyP", 46, "P", 80, "VK_P", empty, empty],
+      [0, 26, "KeyQ", 47, "Q", 81, "VK_Q", empty, empty],
+      [0, 27, "KeyR", 48, "R", 82, "VK_R", empty, empty],
+      [0, 28, "KeyS", 49, "S", 83, "VK_S", empty, empty],
+      [0, 29, "KeyT", 50, "T", 84, "VK_T", empty, empty],
+      [0, 30, "KeyU", 51, "U", 85, "VK_U", empty, empty],
+      [0, 31, "KeyV", 52, "V", 86, "VK_V", empty, empty],
+      [0, 32, "KeyW", 53, "W", 87, "VK_W", empty, empty],
+      [0, 33, "KeyX", 54, "X", 88, "VK_X", empty, empty],
+      [0, 34, "KeyY", 55, "Y", 89, "VK_Y", empty, empty],
+      [0, 35, "KeyZ", 56, "Z", 90, "VK_Z", empty, empty],
+      [0, 36, "Digit1", 22, "1", 49, "VK_1", empty, empty],
+      [0, 37, "Digit2", 23, "2", 50, "VK_2", empty, empty],
+      [0, 38, "Digit3", 24, "3", 51, "VK_3", empty, empty],
+      [0, 39, "Digit4", 25, "4", 52, "VK_4", empty, empty],
+      [0, 40, "Digit5", 26, "5", 53, "VK_5", empty, empty],
+      [0, 41, "Digit6", 27, "6", 54, "VK_6", empty, empty],
+      [0, 42, "Digit7", 28, "7", 55, "VK_7", empty, empty],
+      [0, 43, "Digit8", 29, "8", 56, "VK_8", empty, empty],
+      [0, 44, "Digit9", 30, "9", 57, "VK_9", empty, empty],
+      [0, 45, "Digit0", 21, "0", 48, "VK_0", empty, empty],
+      [1, 46, "Enter", 3, "Enter", 13, "VK_RETURN", empty, empty],
+      [1, 47, "Escape", 9, "Escape", 27, "VK_ESCAPE", empty, empty],
+      [1, 48, "Backspace", 1, "Backspace", 8, "VK_BACK", empty, empty],
+      [1, 49, "Tab", 2, "Tab", 9, "VK_TAB", empty, empty],
+      [1, 50, "Space", 10, "Space", 32, "VK_SPACE", empty, empty],
+      [0, 51, "Minus", 88, "-", 189, "VK_OEM_MINUS", "-", "OEM_MINUS"],
+      [0, 52, "Equal", 86, "=", 187, "VK_OEM_PLUS", "=", "OEM_PLUS"],
+      [0, 53, "BracketLeft", 92, "[", 219, "VK_OEM_4", "[", "OEM_4"],
+      [0, 54, "BracketRight", 94, "]", 221, "VK_OEM_6", "]", "OEM_6"],
+      [0, 55, "Backslash", 93, "\\", 220, "VK_OEM_5", "\\", "OEM_5"],
+      [0, 56, "IntlHash", 0, empty, 0, empty, empty, empty],
+      [0, 57, "Semicolon", 85, ";", 186, "VK_OEM_1", ";", "OEM_1"],
+      [0, 58, "Quote", 95, "'", 222, "VK_OEM_7", "'", "OEM_7"],
+      [0, 59, "Backquote", 91, "`", 192, "VK_OEM_3", "`", "OEM_3"],
+      [0, 60, "Comma", 87, ",", 188, "VK_OEM_COMMA", ",", "OEM_COMMA"],
+      [0, 61, "Period", 89, ".", 190, "VK_OEM_PERIOD", ".", "OEM_PERIOD"],
+      [0, 62, "Slash", 90, "/", 191, "VK_OEM_2", "/", "OEM_2"],
+      [1, 63, "CapsLock", 8, "CapsLock", 20, "VK_CAPITAL", empty, empty],
+      [1, 64, "F1", 59, "F1", 112, "VK_F1", empty, empty],
+      [1, 65, "F2", 60, "F2", 113, "VK_F2", empty, empty],
+      [1, 66, "F3", 61, "F3", 114, "VK_F3", empty, empty],
+      [1, 67, "F4", 62, "F4", 115, "VK_F4", empty, empty],
+      [1, 68, "F5", 63, "F5", 116, "VK_F5", empty, empty],
+      [1, 69, "F6", 64, "F6", 117, "VK_F6", empty, empty],
+      [1, 70, "F7", 65, "F7", 118, "VK_F7", empty, empty],
+      [1, 71, "F8", 66, "F8", 119, "VK_F8", empty, empty],
+      [1, 72, "F9", 67, "F9", 120, "VK_F9", empty, empty],
+      [1, 73, "F10", 68, "F10", 121, "VK_F10", empty, empty],
+      [1, 74, "F11", 69, "F11", 122, "VK_F11", empty, empty],
+      [1, 75, "F12", 70, "F12", 123, "VK_F12", empty, empty],
+      [1, 76, "PrintScreen", 0, empty, 0, empty, empty, empty],
+      [1, 77, "ScrollLock", 84, "ScrollLock", 145, "VK_SCROLL", empty, empty],
+      [1, 78, "Pause", 7, "PauseBreak", 19, "VK_PAUSE", empty, empty],
+      [1, 79, "Insert", 19, "Insert", 45, "VK_INSERT", empty, empty],
+      [1, 80, "Home", 14, "Home", 36, "VK_HOME", empty, empty],
+      [1, 81, "PageUp", 11, "PageUp", 33, "VK_PRIOR", empty, empty],
+      [1, 82, "Delete", 20, "Delete", 46, "VK_DELETE", empty, empty],
+      [1, 83, "End", 13, "End", 35, "VK_END", empty, empty],
+      [1, 84, "PageDown", 12, "PageDown", 34, "VK_NEXT", empty, empty],
+      [1, 85, "ArrowRight", 17, "RightArrow", 39, "VK_RIGHT", "Right", empty],
+      [1, 86, "ArrowLeft", 15, "LeftArrow", 37, "VK_LEFT", "Left", empty],
+      [1, 87, "ArrowDown", 18, "DownArrow", 40, "VK_DOWN", "Down", empty],
+      [1, 88, "ArrowUp", 16, "UpArrow", 38, "VK_UP", "Up", empty],
+      [1, 89, "NumLock", 83, "NumLock", 144, "VK_NUMLOCK", empty, empty],
+      [1, 90, "NumpadDivide", 113, "NumPad_Divide", 111, "VK_DIVIDE", empty, empty],
+      [1, 91, "NumpadMultiply", 108, "NumPad_Multiply", 106, "VK_MULTIPLY", empty, empty],
+      [1, 92, "NumpadSubtract", 111, "NumPad_Subtract", 109, "VK_SUBTRACT", empty, empty],
+      [1, 93, "NumpadAdd", 109, "NumPad_Add", 107, "VK_ADD", empty, empty],
+      [1, 94, "NumpadEnter", 3, empty, 0, empty, empty, empty],
+      [1, 95, "Numpad1", 99, "NumPad1", 97, "VK_NUMPAD1", empty, empty],
+      [1, 96, "Numpad2", 100, "NumPad2", 98, "VK_NUMPAD2", empty, empty],
+      [1, 97, "Numpad3", 101, "NumPad3", 99, "VK_NUMPAD3", empty, empty],
+      [1, 98, "Numpad4", 102, "NumPad4", 100, "VK_NUMPAD4", empty, empty],
+      [1, 99, "Numpad5", 103, "NumPad5", 101, "VK_NUMPAD5", empty, empty],
+      [1, 100, "Numpad6", 104, "NumPad6", 102, "VK_NUMPAD6", empty, empty],
+      [1, 101, "Numpad7", 105, "NumPad7", 103, "VK_NUMPAD7", empty, empty],
+      [1, 102, "Numpad8", 106, "NumPad8", 104, "VK_NUMPAD8", empty, empty],
+      [1, 103, "Numpad9", 107, "NumPad9", 105, "VK_NUMPAD9", empty, empty],
+      [1, 104, "Numpad0", 98, "NumPad0", 96, "VK_NUMPAD0", empty, empty],
+      [1, 105, "NumpadDecimal", 112, "NumPad_Decimal", 110, "VK_DECIMAL", empty, empty],
+      [0, 106, "IntlBackslash", 97, "OEM_102", 226, "VK_OEM_102", empty, empty],
+      [1, 107, "ContextMenu", 58, "ContextMenu", 93, empty, empty, empty],
+      [1, 108, "Power", 0, empty, 0, empty, empty, empty],
+      [1, 109, "NumpadEqual", 0, empty, 0, empty, empty, empty],
+      [1, 110, "F13", 71, "F13", 124, "VK_F13", empty, empty],
+      [1, 111, "F14", 72, "F14", 125, "VK_F14", empty, empty],
+      [1, 112, "F15", 73, "F15", 126, "VK_F15", empty, empty],
+      [1, 113, "F16", 74, "F16", 127, "VK_F16", empty, empty],
+      [1, 114, "F17", 75, "F17", 128, "VK_F17", empty, empty],
+      [1, 115, "F18", 76, "F18", 129, "VK_F18", empty, empty],
+      [1, 116, "F19", 77, "F19", 130, "VK_F19", empty, empty],
+      [1, 117, "F20", 78, "F20", 131, "VK_F20", empty, empty],
+      [1, 118, "F21", 79, "F21", 132, "VK_F21", empty, empty],
+      [1, 119, "F22", 80, "F22", 133, "VK_F22", empty, empty],
+      [1, 120, "F23", 81, "F23", 134, "VK_F23", empty, empty],
+      [1, 121, "F24", 82, "F24", 135, "VK_F24", empty, empty],
+      [1, 122, "Open", 0, empty, 0, empty, empty, empty],
+      [1, 123, "Help", 0, empty, 0, empty, empty, empty],
+      [1, 124, "Select", 0, empty, 0, empty, empty, empty],
+      [1, 125, "Again", 0, empty, 0, empty, empty, empty],
+      [1, 126, "Undo", 0, empty, 0, empty, empty, empty],
+      [1, 127, "Cut", 0, empty, 0, empty, empty, empty],
+      [1, 128, "Copy", 0, empty, 0, empty, empty, empty],
+      [1, 129, "Paste", 0, empty, 0, empty, empty, empty],
+      [1, 130, "Find", 0, empty, 0, empty, empty, empty],
+      [1, 131, "AudioVolumeMute", 117, "AudioVolumeMute", 173, "VK_VOLUME_MUTE", empty, empty],
+      [1, 132, "AudioVolumeUp", 118, "AudioVolumeUp", 175, "VK_VOLUME_UP", empty, empty],
+      [1, 133, "AudioVolumeDown", 119, "AudioVolumeDown", 174, "VK_VOLUME_DOWN", empty, empty],
+      [1, 134, "NumpadComma", 110, "NumPad_Separator", 108, "VK_SEPARATOR", empty, empty],
+      [0, 135, "IntlRo", 115, "ABNT_C1", 193, "VK_ABNT_C1", empty, empty],
+      [1, 136, "KanaMode", 0, empty, 0, empty, empty, empty],
+      [0, 137, "IntlYen", 0, empty, 0, empty, empty, empty],
+      [1, 138, "Convert", 0, empty, 0, empty, empty, empty],
+      [1, 139, "NonConvert", 0, empty, 0, empty, empty, empty],
+      [1, 140, "Lang1", 0, empty, 0, empty, empty, empty],
+      [1, 141, "Lang2", 0, empty, 0, empty, empty, empty],
+      [1, 142, "Lang3", 0, empty, 0, empty, empty, empty],
+      [1, 143, "Lang4", 0, empty, 0, empty, empty, empty],
+      [1, 144, "Lang5", 0, empty, 0, empty, empty, empty],
+      [1, 145, "Abort", 0, empty, 0, empty, empty, empty],
+      [1, 146, "Props", 0, empty, 0, empty, empty, empty],
+      [1, 147, "NumpadParenLeft", 0, empty, 0, empty, empty, empty],
+      [1, 148, "NumpadParenRight", 0, empty, 0, empty, empty, empty],
+      [1, 149, "NumpadBackspace", 0, empty, 0, empty, empty, empty],
+      [1, 150, "NumpadMemoryStore", 0, empty, 0, empty, empty, empty],
+      [1, 151, "NumpadMemoryRecall", 0, empty, 0, empty, empty, empty],
+      [1, 152, "NumpadMemoryClear", 0, empty, 0, empty, empty, empty],
+      [1, 153, "NumpadMemoryAdd", 0, empty, 0, empty, empty, empty],
+      [1, 154, "NumpadMemorySubtract", 0, empty, 0, empty, empty, empty],
+      [1, 155, "NumpadClear", 131, "Clear", 12, "VK_CLEAR", empty, empty],
+      [1, 156, "NumpadClearEntry", 0, empty, 0, empty, empty, empty],
+      [1, 0, empty, 5, "Ctrl", 17, "VK_CONTROL", empty, empty],
+      [1, 0, empty, 4, "Shift", 16, "VK_SHIFT", empty, empty],
+      [1, 0, empty, 6, "Alt", 18, "VK_MENU", empty, empty],
+      [1, 0, empty, 57, "Meta", 91, "VK_COMMAND", empty, empty],
+      [1, 157, "ControlLeft", 5, empty, 0, "VK_LCONTROL", empty, empty],
+      [1, 158, "ShiftLeft", 4, empty, 0, "VK_LSHIFT", empty, empty],
+      [1, 159, "AltLeft", 6, empty, 0, "VK_LMENU", empty, empty],
+      [1, 160, "MetaLeft", 57, empty, 0, "VK_LWIN", empty, empty],
+      [1, 161, "ControlRight", 5, empty, 0, "VK_RCONTROL", empty, empty],
+      [1, 162, "ShiftRight", 4, empty, 0, "VK_RSHIFT", empty, empty],
+      [1, 163, "AltRight", 6, empty, 0, "VK_RMENU", empty, empty],
+      [1, 164, "MetaRight", 57, empty, 0, "VK_RWIN", empty, empty],
+      [1, 165, "BrightnessUp", 0, empty, 0, empty, empty, empty],
+      [1, 166, "BrightnessDown", 0, empty, 0, empty, empty, empty],
+      [1, 167, "MediaPlay", 0, empty, 0, empty, empty, empty],
+      [1, 168, "MediaRecord", 0, empty, 0, empty, empty, empty],
+      [1, 169, "MediaFastForward", 0, empty, 0, empty, empty, empty],
+      [1, 170, "MediaRewind", 0, empty, 0, empty, empty, empty],
+      [1, 171, "MediaTrackNext", 124, "MediaTrackNext", 176, "VK_MEDIA_NEXT_TRACK", empty, empty],
+      [1, 172, "MediaTrackPrevious", 125, "MediaTrackPrevious", 177, "VK_MEDIA_PREV_TRACK", empty, empty],
+      [1, 173, "MediaStop", 126, "MediaStop", 178, "VK_MEDIA_STOP", empty, empty],
+      [1, 174, "Eject", 0, empty, 0, empty, empty, empty],
+      [1, 175, "MediaPlayPause", 127, "MediaPlayPause", 179, "VK_MEDIA_PLAY_PAUSE", empty, empty],
+      [1, 176, "MediaSelect", 128, "LaunchMediaPlayer", 181, "VK_MEDIA_LAUNCH_MEDIA_SELECT", empty, empty],
+      [1, 177, "LaunchMail", 129, "LaunchMail", 180, "VK_MEDIA_LAUNCH_MAIL", empty, empty],
+      [1, 178, "LaunchApp2", 130, "LaunchApp2", 183, "VK_MEDIA_LAUNCH_APP2", empty, empty],
+      [1, 179, "LaunchApp1", 0, empty, 0, "VK_MEDIA_LAUNCH_APP1", empty, empty],
+      [1, 180, "SelectTask", 0, empty, 0, empty, empty, empty],
+      [1, 181, "LaunchScreenSaver", 0, empty, 0, empty, empty, empty],
+      [1, 182, "BrowserSearch", 120, "BrowserSearch", 170, "VK_BROWSER_SEARCH", empty, empty],
+      [1, 183, "BrowserHome", 121, "BrowserHome", 172, "VK_BROWSER_HOME", empty, empty],
+      [1, 184, "BrowserBack", 122, "BrowserBack", 166, "VK_BROWSER_BACK", empty, empty],
+      [1, 185, "BrowserForward", 123, "BrowserForward", 167, "VK_BROWSER_FORWARD", empty, empty],
+      [1, 186, "BrowserStop", 0, empty, 0, "VK_BROWSER_STOP", empty, empty],
+      [1, 187, "BrowserRefresh", 0, empty, 0, "VK_BROWSER_REFRESH", empty, empty],
+      [1, 188, "BrowserFavorites", 0, empty, 0, "VK_BROWSER_FAVORITES", empty, empty],
+      [1, 189, "ZoomToggle", 0, empty, 0, empty, empty, empty],
+      [1, 190, "MailReply", 0, empty, 0, empty, empty, empty],
+      [1, 191, "MailForward", 0, empty, 0, empty, empty, empty],
+      [1, 192, "MailSend", 0, empty, 0, empty, empty, empty],
+      [1, 0, empty, 114, "KeyInComposition", 229, empty, empty, empty],
+      [1, 0, empty, 116, "ABNT_C2", 194, "VK_ABNT_C2", empty, empty],
+      [1, 0, empty, 96, "OEM_8", 223, "VK_OEM_8", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_KANA", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_HANGUL", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_JUNJA", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_FINAL", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_HANJA", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_KANJI", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_CONVERT", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_NONCONVERT", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_ACCEPT", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_MODECHANGE", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_SELECT", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_PRINT", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_EXECUTE", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_SNAPSHOT", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_HELP", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_APPS", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_PROCESSKEY", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_PACKET", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_DBE_SBCSCHAR", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_DBE_DBCSCHAR", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_ATTN", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_CRSEL", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_EXSEL", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_EREOF", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_PLAY", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_ZOOM", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_NONAME", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_PA1", empty, empty],
+      [1, 0, empty, 0, empty, 0, "VK_OEM_CLEAR", empty, empty]
     ];
     const seenKeyCode = [];
     const seenScanCode = [];
     for (const mapping of mappings) {
-      const [_keyCodeOrd, immutable, scanCode, scanCodeStr, keyCode, keyCodeStr, eventKeyCode, vkey, usUserSettingsLabel, generalUserSettingsLabel] = mapping;
+      const [immutable, scanCode, scanCodeStr, keyCode, keyCodeStr, eventKeyCode, vkey, usUserSettingsLabel, generalUserSettingsLabel] = mapping;
       if (!seenScanCode[scanCode]) {
         seenScanCode[scanCode] = true;
         scanCodeIntToStr[scanCode] = scanCodeStr;
@@ -5677,7 +5718,7 @@
     }
     KeyCodeUtils2.fromUserSettings = fromUserSettings;
     function toElectronAccelerator(keyCode) {
-      if (keyCode >= 93 && keyCode <= 108) {
+      if (keyCode >= 98 && keyCode <= 113) {
         return null;
       }
       switch (keyCode) {
@@ -6847,65 +6888,67 @@
     EditorOption2[EditorOption2["overviewRulerBorder"] = 79] = "overviewRulerBorder";
     EditorOption2[EditorOption2["overviewRulerLanes"] = 80] = "overviewRulerLanes";
     EditorOption2[EditorOption2["padding"] = 81] = "padding";
-    EditorOption2[EditorOption2["parameterHints"] = 82] = "parameterHints";
-    EditorOption2[EditorOption2["peekWidgetDefaultFocus"] = 83] = "peekWidgetDefaultFocus";
-    EditorOption2[EditorOption2["definitionLinkOpensInPeek"] = 84] = "definitionLinkOpensInPeek";
-    EditorOption2[EditorOption2["quickSuggestions"] = 85] = "quickSuggestions";
-    EditorOption2[EditorOption2["quickSuggestionsDelay"] = 86] = "quickSuggestionsDelay";
-    EditorOption2[EditorOption2["readOnly"] = 87] = "readOnly";
-    EditorOption2[EditorOption2["renameOnType"] = 88] = "renameOnType";
-    EditorOption2[EditorOption2["renderControlCharacters"] = 89] = "renderControlCharacters";
-    EditorOption2[EditorOption2["renderFinalNewline"] = 90] = "renderFinalNewline";
-    EditorOption2[EditorOption2["renderLineHighlight"] = 91] = "renderLineHighlight";
-    EditorOption2[EditorOption2["renderLineHighlightOnlyWhenFocus"] = 92] = "renderLineHighlightOnlyWhenFocus";
-    EditorOption2[EditorOption2["renderValidationDecorations"] = 93] = "renderValidationDecorations";
-    EditorOption2[EditorOption2["renderWhitespace"] = 94] = "renderWhitespace";
-    EditorOption2[EditorOption2["revealHorizontalRightPadding"] = 95] = "revealHorizontalRightPadding";
-    EditorOption2[EditorOption2["roundedSelection"] = 96] = "roundedSelection";
-    EditorOption2[EditorOption2["rulers"] = 97] = "rulers";
-    EditorOption2[EditorOption2["scrollbar"] = 98] = "scrollbar";
-    EditorOption2[EditorOption2["scrollBeyondLastColumn"] = 99] = "scrollBeyondLastColumn";
-    EditorOption2[EditorOption2["scrollBeyondLastLine"] = 100] = "scrollBeyondLastLine";
-    EditorOption2[EditorOption2["scrollPredominantAxis"] = 101] = "scrollPredominantAxis";
-    EditorOption2[EditorOption2["selectionClipboard"] = 102] = "selectionClipboard";
-    EditorOption2[EditorOption2["selectionHighlight"] = 103] = "selectionHighlight";
-    EditorOption2[EditorOption2["selectOnLineNumbers"] = 104] = "selectOnLineNumbers";
-    EditorOption2[EditorOption2["showFoldingControls"] = 105] = "showFoldingControls";
-    EditorOption2[EditorOption2["showUnused"] = 106] = "showUnused";
-    EditorOption2[EditorOption2["snippetSuggestions"] = 107] = "snippetSuggestions";
-    EditorOption2[EditorOption2["smartSelect"] = 108] = "smartSelect";
-    EditorOption2[EditorOption2["smoothScrolling"] = 109] = "smoothScrolling";
-    EditorOption2[EditorOption2["stickyScroll"] = 110] = "stickyScroll";
-    EditorOption2[EditorOption2["stickyTabStops"] = 111] = "stickyTabStops";
-    EditorOption2[EditorOption2["stopRenderingLineAfter"] = 112] = "stopRenderingLineAfter";
-    EditorOption2[EditorOption2["suggest"] = 113] = "suggest";
-    EditorOption2[EditorOption2["suggestFontSize"] = 114] = "suggestFontSize";
-    EditorOption2[EditorOption2["suggestLineHeight"] = 115] = "suggestLineHeight";
-    EditorOption2[EditorOption2["suggestOnTriggerCharacters"] = 116] = "suggestOnTriggerCharacters";
-    EditorOption2[EditorOption2["suggestSelection"] = 117] = "suggestSelection";
-    EditorOption2[EditorOption2["tabCompletion"] = 118] = "tabCompletion";
-    EditorOption2[EditorOption2["tabIndex"] = 119] = "tabIndex";
-    EditorOption2[EditorOption2["unicodeHighlighting"] = 120] = "unicodeHighlighting";
-    EditorOption2[EditorOption2["unusualLineTerminators"] = 121] = "unusualLineTerminators";
-    EditorOption2[EditorOption2["useShadowDOM"] = 122] = "useShadowDOM";
-    EditorOption2[EditorOption2["useTabStops"] = 123] = "useTabStops";
-    EditorOption2[EditorOption2["wordBreak"] = 124] = "wordBreak";
-    EditorOption2[EditorOption2["wordSeparators"] = 125] = "wordSeparators";
-    EditorOption2[EditorOption2["wordWrap"] = 126] = "wordWrap";
-    EditorOption2[EditorOption2["wordWrapBreakAfterCharacters"] = 127] = "wordWrapBreakAfterCharacters";
-    EditorOption2[EditorOption2["wordWrapBreakBeforeCharacters"] = 128] = "wordWrapBreakBeforeCharacters";
-    EditorOption2[EditorOption2["wordWrapColumn"] = 129] = "wordWrapColumn";
-    EditorOption2[EditorOption2["wordWrapOverride1"] = 130] = "wordWrapOverride1";
-    EditorOption2[EditorOption2["wordWrapOverride2"] = 131] = "wordWrapOverride2";
-    EditorOption2[EditorOption2["wrappingIndent"] = 132] = "wrappingIndent";
-    EditorOption2[EditorOption2["wrappingStrategy"] = 133] = "wrappingStrategy";
-    EditorOption2[EditorOption2["showDeprecated"] = 134] = "showDeprecated";
-    EditorOption2[EditorOption2["inlayHints"] = 135] = "inlayHints";
-    EditorOption2[EditorOption2["editorClassName"] = 136] = "editorClassName";
-    EditorOption2[EditorOption2["pixelRatio"] = 137] = "pixelRatio";
-    EditorOption2[EditorOption2["tabFocusMode"] = 138] = "tabFocusMode";
-    EditorOption2[EditorOption2["layoutInfo"] = 139] = "layoutInfo";
-    EditorOption2[EditorOption2["wrappingInfo"] = 140] = "wrappingInfo";
+    EditorOption2[EditorOption2["pasteAs"] = 82] = "pasteAs";
+    EditorOption2[EditorOption2["parameterHints"] = 83] = "parameterHints";
+    EditorOption2[EditorOption2["peekWidgetDefaultFocus"] = 84] = "peekWidgetDefaultFocus";
+    EditorOption2[EditorOption2["definitionLinkOpensInPeek"] = 85] = "definitionLinkOpensInPeek";
+    EditorOption2[EditorOption2["quickSuggestions"] = 86] = "quickSuggestions";
+    EditorOption2[EditorOption2["quickSuggestionsDelay"] = 87] = "quickSuggestionsDelay";
+    EditorOption2[EditorOption2["readOnly"] = 88] = "readOnly";
+    EditorOption2[EditorOption2["renameOnType"] = 89] = "renameOnType";
+    EditorOption2[EditorOption2["renderControlCharacters"] = 90] = "renderControlCharacters";
+    EditorOption2[EditorOption2["renderFinalNewline"] = 91] = "renderFinalNewline";
+    EditorOption2[EditorOption2["renderLineHighlight"] = 92] = "renderLineHighlight";
+    EditorOption2[EditorOption2["renderLineHighlightOnlyWhenFocus"] = 93] = "renderLineHighlightOnlyWhenFocus";
+    EditorOption2[EditorOption2["renderValidationDecorations"] = 94] = "renderValidationDecorations";
+    EditorOption2[EditorOption2["renderWhitespace"] = 95] = "renderWhitespace";
+    EditorOption2[EditorOption2["revealHorizontalRightPadding"] = 96] = "revealHorizontalRightPadding";
+    EditorOption2[EditorOption2["roundedSelection"] = 97] = "roundedSelection";
+    EditorOption2[EditorOption2["rulers"] = 98] = "rulers";
+    EditorOption2[EditorOption2["scrollbar"] = 99] = "scrollbar";
+    EditorOption2[EditorOption2["scrollBeyondLastColumn"] = 100] = "scrollBeyondLastColumn";
+    EditorOption2[EditorOption2["scrollBeyondLastLine"] = 101] = "scrollBeyondLastLine";
+    EditorOption2[EditorOption2["scrollPredominantAxis"] = 102] = "scrollPredominantAxis";
+    EditorOption2[EditorOption2["selectionClipboard"] = 103] = "selectionClipboard";
+    EditorOption2[EditorOption2["selectionHighlight"] = 104] = "selectionHighlight";
+    EditorOption2[EditorOption2["selectOnLineNumbers"] = 105] = "selectOnLineNumbers";
+    EditorOption2[EditorOption2["showFoldingControls"] = 106] = "showFoldingControls";
+    EditorOption2[EditorOption2["showUnused"] = 107] = "showUnused";
+    EditorOption2[EditorOption2["snippetSuggestions"] = 108] = "snippetSuggestions";
+    EditorOption2[EditorOption2["smartSelect"] = 109] = "smartSelect";
+    EditorOption2[EditorOption2["smoothScrolling"] = 110] = "smoothScrolling";
+    EditorOption2[EditorOption2["stickyScroll"] = 111] = "stickyScroll";
+    EditorOption2[EditorOption2["stickyTabStops"] = 112] = "stickyTabStops";
+    EditorOption2[EditorOption2["stopRenderingLineAfter"] = 113] = "stopRenderingLineAfter";
+    EditorOption2[EditorOption2["suggest"] = 114] = "suggest";
+    EditorOption2[EditorOption2["suggestFontSize"] = 115] = "suggestFontSize";
+    EditorOption2[EditorOption2["suggestLineHeight"] = 116] = "suggestLineHeight";
+    EditorOption2[EditorOption2["suggestOnTriggerCharacters"] = 117] = "suggestOnTriggerCharacters";
+    EditorOption2[EditorOption2["suggestSelection"] = 118] = "suggestSelection";
+    EditorOption2[EditorOption2["tabCompletion"] = 119] = "tabCompletion";
+    EditorOption2[EditorOption2["tabIndex"] = 120] = "tabIndex";
+    EditorOption2[EditorOption2["unicodeHighlighting"] = 121] = "unicodeHighlighting";
+    EditorOption2[EditorOption2["unusualLineTerminators"] = 122] = "unusualLineTerminators";
+    EditorOption2[EditorOption2["useShadowDOM"] = 123] = "useShadowDOM";
+    EditorOption2[EditorOption2["useTabStops"] = 124] = "useTabStops";
+    EditorOption2[EditorOption2["wordBreak"] = 125] = "wordBreak";
+    EditorOption2[EditorOption2["wordSeparators"] = 126] = "wordSeparators";
+    EditorOption2[EditorOption2["wordWrap"] = 127] = "wordWrap";
+    EditorOption2[EditorOption2["wordWrapBreakAfterCharacters"] = 128] = "wordWrapBreakAfterCharacters";
+    EditorOption2[EditorOption2["wordWrapBreakBeforeCharacters"] = 129] = "wordWrapBreakBeforeCharacters";
+    EditorOption2[EditorOption2["wordWrapColumn"] = 130] = "wordWrapColumn";
+    EditorOption2[EditorOption2["wordWrapOverride1"] = 131] = "wordWrapOverride1";
+    EditorOption2[EditorOption2["wordWrapOverride2"] = 132] = "wordWrapOverride2";
+    EditorOption2[EditorOption2["wrappingIndent"] = 133] = "wrappingIndent";
+    EditorOption2[EditorOption2["wrappingStrategy"] = 134] = "wrappingStrategy";
+    EditorOption2[EditorOption2["showDeprecated"] = 135] = "showDeprecated";
+    EditorOption2[EditorOption2["inlayHints"] = 136] = "inlayHints";
+    EditorOption2[EditorOption2["editorClassName"] = 137] = "editorClassName";
+    EditorOption2[EditorOption2["pixelRatio"] = 138] = "pixelRatio";
+    EditorOption2[EditorOption2["tabFocusMode"] = 139] = "tabFocusMode";
+    EditorOption2[EditorOption2["layoutInfo"] = 140] = "layoutInfo";
+    EditorOption2[EditorOption2["wrappingInfo"] = 141] = "wrappingInfo";
+    EditorOption2[EditorOption2["defaultColorDecorators"] = 142] = "defaultColorDecorators";
   })(EditorOption || (EditorOption = {}));
   var EndOfLinePreference;
   (function(EndOfLinePreference2) {
@@ -6918,6 +6961,11 @@
     EndOfLineSequence2[EndOfLineSequence2["LF"] = 0] = "LF";
     EndOfLineSequence2[EndOfLineSequence2["CRLF"] = 1] = "CRLF";
   })(EndOfLineSequence || (EndOfLineSequence = {}));
+  var GlyphMarginLane;
+  (function(GlyphMarginLane3) {
+    GlyphMarginLane3[GlyphMarginLane3["Left"] = 1] = "Left";
+    GlyphMarginLane3[GlyphMarginLane3["Right"] = 2] = "Right";
+  })(GlyphMarginLane || (GlyphMarginLane = {}));
   var IndentAction;
   (function(IndentAction2) {
     IndentAction2[IndentAction2["None"] = 0] = "None";
@@ -7023,56 +7071,61 @@
     KeyCode2[KeyCode2["F17"] = 75] = "F17";
     KeyCode2[KeyCode2["F18"] = 76] = "F18";
     KeyCode2[KeyCode2["F19"] = 77] = "F19";
-    KeyCode2[KeyCode2["NumLock"] = 78] = "NumLock";
-    KeyCode2[KeyCode2["ScrollLock"] = 79] = "ScrollLock";
-    KeyCode2[KeyCode2["Semicolon"] = 80] = "Semicolon";
-    KeyCode2[KeyCode2["Equal"] = 81] = "Equal";
-    KeyCode2[KeyCode2["Comma"] = 82] = "Comma";
-    KeyCode2[KeyCode2["Minus"] = 83] = "Minus";
-    KeyCode2[KeyCode2["Period"] = 84] = "Period";
-    KeyCode2[KeyCode2["Slash"] = 85] = "Slash";
-    KeyCode2[KeyCode2["Backquote"] = 86] = "Backquote";
-    KeyCode2[KeyCode2["BracketLeft"] = 87] = "BracketLeft";
-    KeyCode2[KeyCode2["Backslash"] = 88] = "Backslash";
-    KeyCode2[KeyCode2["BracketRight"] = 89] = "BracketRight";
-    KeyCode2[KeyCode2["Quote"] = 90] = "Quote";
-    KeyCode2[KeyCode2["OEM_8"] = 91] = "OEM_8";
-    KeyCode2[KeyCode2["IntlBackslash"] = 92] = "IntlBackslash";
-    KeyCode2[KeyCode2["Numpad0"] = 93] = "Numpad0";
-    KeyCode2[KeyCode2["Numpad1"] = 94] = "Numpad1";
-    KeyCode2[KeyCode2["Numpad2"] = 95] = "Numpad2";
-    KeyCode2[KeyCode2["Numpad3"] = 96] = "Numpad3";
-    KeyCode2[KeyCode2["Numpad4"] = 97] = "Numpad4";
-    KeyCode2[KeyCode2["Numpad5"] = 98] = "Numpad5";
-    KeyCode2[KeyCode2["Numpad6"] = 99] = "Numpad6";
-    KeyCode2[KeyCode2["Numpad7"] = 100] = "Numpad7";
-    KeyCode2[KeyCode2["Numpad8"] = 101] = "Numpad8";
-    KeyCode2[KeyCode2["Numpad9"] = 102] = "Numpad9";
-    KeyCode2[KeyCode2["NumpadMultiply"] = 103] = "NumpadMultiply";
-    KeyCode2[KeyCode2["NumpadAdd"] = 104] = "NumpadAdd";
-    KeyCode2[KeyCode2["NUMPAD_SEPARATOR"] = 105] = "NUMPAD_SEPARATOR";
-    KeyCode2[KeyCode2["NumpadSubtract"] = 106] = "NumpadSubtract";
-    KeyCode2[KeyCode2["NumpadDecimal"] = 107] = "NumpadDecimal";
-    KeyCode2[KeyCode2["NumpadDivide"] = 108] = "NumpadDivide";
-    KeyCode2[KeyCode2["KEY_IN_COMPOSITION"] = 109] = "KEY_IN_COMPOSITION";
-    KeyCode2[KeyCode2["ABNT_C1"] = 110] = "ABNT_C1";
-    KeyCode2[KeyCode2["ABNT_C2"] = 111] = "ABNT_C2";
-    KeyCode2[KeyCode2["AudioVolumeMute"] = 112] = "AudioVolumeMute";
-    KeyCode2[KeyCode2["AudioVolumeUp"] = 113] = "AudioVolumeUp";
-    KeyCode2[KeyCode2["AudioVolumeDown"] = 114] = "AudioVolumeDown";
-    KeyCode2[KeyCode2["BrowserSearch"] = 115] = "BrowserSearch";
-    KeyCode2[KeyCode2["BrowserHome"] = 116] = "BrowserHome";
-    KeyCode2[KeyCode2["BrowserBack"] = 117] = "BrowserBack";
-    KeyCode2[KeyCode2["BrowserForward"] = 118] = "BrowserForward";
-    KeyCode2[KeyCode2["MediaTrackNext"] = 119] = "MediaTrackNext";
-    KeyCode2[KeyCode2["MediaTrackPrevious"] = 120] = "MediaTrackPrevious";
-    KeyCode2[KeyCode2["MediaStop"] = 121] = "MediaStop";
-    KeyCode2[KeyCode2["MediaPlayPause"] = 122] = "MediaPlayPause";
-    KeyCode2[KeyCode2["LaunchMediaPlayer"] = 123] = "LaunchMediaPlayer";
-    KeyCode2[KeyCode2["LaunchMail"] = 124] = "LaunchMail";
-    KeyCode2[KeyCode2["LaunchApp2"] = 125] = "LaunchApp2";
-    KeyCode2[KeyCode2["Clear"] = 126] = "Clear";
-    KeyCode2[KeyCode2["MAX_VALUE"] = 127] = "MAX_VALUE";
+    KeyCode2[KeyCode2["F20"] = 78] = "F20";
+    KeyCode2[KeyCode2["F21"] = 79] = "F21";
+    KeyCode2[KeyCode2["F22"] = 80] = "F22";
+    KeyCode2[KeyCode2["F23"] = 81] = "F23";
+    KeyCode2[KeyCode2["F24"] = 82] = "F24";
+    KeyCode2[KeyCode2["NumLock"] = 83] = "NumLock";
+    KeyCode2[KeyCode2["ScrollLock"] = 84] = "ScrollLock";
+    KeyCode2[KeyCode2["Semicolon"] = 85] = "Semicolon";
+    KeyCode2[KeyCode2["Equal"] = 86] = "Equal";
+    KeyCode2[KeyCode2["Comma"] = 87] = "Comma";
+    KeyCode2[KeyCode2["Minus"] = 88] = "Minus";
+    KeyCode2[KeyCode2["Period"] = 89] = "Period";
+    KeyCode2[KeyCode2["Slash"] = 90] = "Slash";
+    KeyCode2[KeyCode2["Backquote"] = 91] = "Backquote";
+    KeyCode2[KeyCode2["BracketLeft"] = 92] = "BracketLeft";
+    KeyCode2[KeyCode2["Backslash"] = 93] = "Backslash";
+    KeyCode2[KeyCode2["BracketRight"] = 94] = "BracketRight";
+    KeyCode2[KeyCode2["Quote"] = 95] = "Quote";
+    KeyCode2[KeyCode2["OEM_8"] = 96] = "OEM_8";
+    KeyCode2[KeyCode2["IntlBackslash"] = 97] = "IntlBackslash";
+    KeyCode2[KeyCode2["Numpad0"] = 98] = "Numpad0";
+    KeyCode2[KeyCode2["Numpad1"] = 99] = "Numpad1";
+    KeyCode2[KeyCode2["Numpad2"] = 100] = "Numpad2";
+    KeyCode2[KeyCode2["Numpad3"] = 101] = "Numpad3";
+    KeyCode2[KeyCode2["Numpad4"] = 102] = "Numpad4";
+    KeyCode2[KeyCode2["Numpad5"] = 103] = "Numpad5";
+    KeyCode2[KeyCode2["Numpad6"] = 104] = "Numpad6";
+    KeyCode2[KeyCode2["Numpad7"] = 105] = "Numpad7";
+    KeyCode2[KeyCode2["Numpad8"] = 106] = "Numpad8";
+    KeyCode2[KeyCode2["Numpad9"] = 107] = "Numpad9";
+    KeyCode2[KeyCode2["NumpadMultiply"] = 108] = "NumpadMultiply";
+    KeyCode2[KeyCode2["NumpadAdd"] = 109] = "NumpadAdd";
+    KeyCode2[KeyCode2["NUMPAD_SEPARATOR"] = 110] = "NUMPAD_SEPARATOR";
+    KeyCode2[KeyCode2["NumpadSubtract"] = 111] = "NumpadSubtract";
+    KeyCode2[KeyCode2["NumpadDecimal"] = 112] = "NumpadDecimal";
+    KeyCode2[KeyCode2["NumpadDivide"] = 113] = "NumpadDivide";
+    KeyCode2[KeyCode2["KEY_IN_COMPOSITION"] = 114] = "KEY_IN_COMPOSITION";
+    KeyCode2[KeyCode2["ABNT_C1"] = 115] = "ABNT_C1";
+    KeyCode2[KeyCode2["ABNT_C2"] = 116] = "ABNT_C2";
+    KeyCode2[KeyCode2["AudioVolumeMute"] = 117] = "AudioVolumeMute";
+    KeyCode2[KeyCode2["AudioVolumeUp"] = 118] = "AudioVolumeUp";
+    KeyCode2[KeyCode2["AudioVolumeDown"] = 119] = "AudioVolumeDown";
+    KeyCode2[KeyCode2["BrowserSearch"] = 120] = "BrowserSearch";
+    KeyCode2[KeyCode2["BrowserHome"] = 121] = "BrowserHome";
+    KeyCode2[KeyCode2["BrowserBack"] = 122] = "BrowserBack";
+    KeyCode2[KeyCode2["BrowserForward"] = 123] = "BrowserForward";
+    KeyCode2[KeyCode2["MediaTrackNext"] = 124] = "MediaTrackNext";
+    KeyCode2[KeyCode2["MediaTrackPrevious"] = 125] = "MediaTrackPrevious";
+    KeyCode2[KeyCode2["MediaStop"] = 126] = "MediaStop";
+    KeyCode2[KeyCode2["MediaPlayPause"] = 127] = "MediaPlayPause";
+    KeyCode2[KeyCode2["LaunchMediaPlayer"] = 128] = "LaunchMediaPlayer";
+    KeyCode2[KeyCode2["LaunchMail"] = 129] = "LaunchMail";
+    KeyCode2[KeyCode2["LaunchApp2"] = 130] = "LaunchApp2";
+    KeyCode2[KeyCode2["Clear"] = 131] = "Clear";
+    KeyCode2[KeyCode2["MAX_VALUE"] = 132] = "MAX_VALUE";
   })(KeyCode || (KeyCode = {}));
   var MarkerSeverity;
   (function(MarkerSeverity2) {
@@ -7290,6 +7343,11 @@
     OverviewRulerLane3[OverviewRulerLane3["Right"] = 4] = "Right";
     OverviewRulerLane3[OverviewRulerLane3["Full"] = 7] = "Full";
   })(OverviewRulerLane2 || (OverviewRulerLane2 = {}));
+  var GlyphMarginLane2;
+  (function(GlyphMarginLane3) {
+    GlyphMarginLane3[GlyphMarginLane3["Left"] = 1] = "Left";
+    GlyphMarginLane3[GlyphMarginLane3["Right"] = 2] = "Right";
+  })(GlyphMarginLane2 || (GlyphMarginLane2 = {}));
   var MinimapPosition2;
   (function(MinimapPosition3) {
     MinimapPosition3[MinimapPosition3["Inline"] = 1] = "Inline";
@@ -7582,35 +7640,70 @@
     return character === " " || character === "\n" || character === "	";
   }
 
-  // node_modules/monaco-editor/esm/vs/editor/common/diff/linesDiffComputer.js
-  var LinesDiff = class {
-    constructor(changes, hitTimeout) {
-      this.changes = changes;
-      this.hitTimeout = hitTimeout;
-    }
-  };
-  var LineRangeMapping = class {
-    constructor(originalRange, modifiedRange, innerChanges) {
-      this.originalRange = originalRange;
-      this.modifiedRange = modifiedRange;
-      this.innerChanges = innerChanges;
-    }
-    toString() {
-      return `{${this.originalRange.toString()}->${this.modifiedRange.toString()}}`;
-    }
-  };
-  var RangeMapping = class {
-    constructor(originalRange, modifiedRange) {
-      this.originalRange = originalRange;
-      this.modifiedRange = modifiedRange;
-    }
-    toString() {
-      return `{${this.originalRange.toString()}->${this.modifiedRange.toString()}}`;
-    }
-  };
-
   // node_modules/monaco-editor/esm/vs/editor/common/core/lineRange.js
   var LineRange = class {
+    static fromRange(range) {
+      return new LineRange(range.startLineNumber, range.endLineNumber);
+    }
+    static joinMany(lineRanges) {
+      if (lineRanges.length === 0) {
+        return [];
+      }
+      let result = lineRanges[0];
+      for (let i = 1; i < lineRanges.length; i++) {
+        result = this.join(result, lineRanges[i]);
+      }
+      return result;
+    }
+    static join(lineRanges1, lineRanges2) {
+      if (lineRanges1.length === 0) {
+        return lineRanges2;
+      }
+      if (lineRanges2.length === 0) {
+        return lineRanges1;
+      }
+      const result = [];
+      let i1 = 0;
+      let i2 = 0;
+      let current = null;
+      while (i1 < lineRanges1.length || i2 < lineRanges2.length) {
+        let next = null;
+        if (i1 < lineRanges1.length && i2 < lineRanges2.length) {
+          const lineRange1 = lineRanges1[i1];
+          const lineRange2 = lineRanges2[i2];
+          if (lineRange1.startLineNumber < lineRange2.startLineNumber) {
+            next = lineRange1;
+            i1++;
+          } else {
+            next = lineRange2;
+            i2++;
+          }
+        } else if (i1 < lineRanges1.length) {
+          next = lineRanges1[i1];
+          i1++;
+        } else {
+          next = lineRanges2[i2];
+          i2++;
+        }
+        if (current === null) {
+          current = next;
+        } else {
+          if (current.endLineNumberExclusive >= next.startLineNumber) {
+            current = new LineRange(current.startLineNumber, Math.max(current.endLineNumberExclusive, next.endLineNumberExclusive));
+          } else {
+            result.push(current);
+            current = next;
+          }
+        }
+      }
+      if (current !== null) {
+        result.push(current);
+      }
+      return result;
+    }
+    static ofLength(startLineNumber, length) {
+      return new LineRange(startLineNumber, startLineNumber + length);
+    }
     constructor(startLineNumber, endLineNumberExclusive) {
       if (startLineNumber > endLineNumberExclusive) {
         throw new BugIndicatingError(`startLineNumber ${startLineNumber} cannot be after endLineNumberExclusive ${endLineNumberExclusive}`);
@@ -7644,8 +7737,71 @@
       }
       return void 0;
     }
+    intersectsStrict(other) {
+      return this.startLineNumber < other.endLineNumberExclusive && other.startLineNumber < this.endLineNumberExclusive;
+    }
     overlapOrTouch(other) {
       return this.startLineNumber <= other.endLineNumberExclusive && other.startLineNumber <= this.endLineNumberExclusive;
+    }
+    equals(b) {
+      return this.startLineNumber === b.startLineNumber && this.endLineNumberExclusive === b.endLineNumberExclusive;
+    }
+    toInclusiveRange() {
+      if (this.isEmpty) {
+        return null;
+      }
+      return new Range(this.startLineNumber, 1, this.endLineNumberExclusive - 1, Number.MAX_SAFE_INTEGER);
+    }
+    toExclusiveRange() {
+      return new Range(this.startLineNumber, 1, this.endLineNumberExclusive, 1);
+    }
+  };
+
+  // node_modules/monaco-editor/esm/vs/editor/common/diff/linesDiffComputer.js
+  var LinesDiff = class {
+    constructor(changes, hitTimeout) {
+      this.changes = changes;
+      this.hitTimeout = hitTimeout;
+    }
+  };
+  var LineRangeMapping = class {
+    static inverse(mapping, originalLineCount, modifiedLineCount) {
+      const result = [];
+      let lastOriginalEndLineNumber = 1;
+      let lastModifiedEndLineNumber = 1;
+      for (const m of mapping) {
+        const r2 = new LineRangeMapping(new LineRange(lastOriginalEndLineNumber, m.originalRange.startLineNumber), new LineRange(lastModifiedEndLineNumber, m.modifiedRange.startLineNumber), void 0);
+        if (!r2.modifiedRange.isEmpty) {
+          result.push(r2);
+        }
+        lastOriginalEndLineNumber = m.originalRange.endLineNumberExclusive;
+        lastModifiedEndLineNumber = m.modifiedRange.endLineNumberExclusive;
+      }
+      const r = new LineRangeMapping(new LineRange(lastOriginalEndLineNumber, originalLineCount + 1), new LineRange(lastModifiedEndLineNumber, modifiedLineCount + 1), void 0);
+      if (!r.modifiedRange.isEmpty) {
+        result.push(r);
+      }
+      return result;
+    }
+    constructor(originalRange, modifiedRange, innerChanges) {
+      this.originalRange = originalRange;
+      this.modifiedRange = modifiedRange;
+      this.innerChanges = innerChanges;
+    }
+    toString() {
+      return `{${this.originalRange.toString()}->${this.modifiedRange.toString()}}`;
+    }
+    get changedLineCount() {
+      return Math.max(this.originalRange.length, this.modifiedRange.length);
+    }
+  };
+  var RangeMapping = class {
+    constructor(originalRange, modifiedRange) {
+      this.originalRange = originalRange;
+      this.modifiedRange = modifiedRange;
+    }
+    toString() {
+      return `{${this.originalRange.toString()}->${this.modifiedRange.toString()}}`;
     }
   };
 
@@ -8070,6 +8226,23 @@
 
   // node_modules/monaco-editor/esm/vs/editor/common/core/offsetRange.js
   var OffsetRange = class {
+    static addRange(range, sortedRanges) {
+      let i = 0;
+      while (i < sortedRanges.length && sortedRanges[i].endExclusive < range.start) {
+        i++;
+      }
+      let j = i;
+      while (j < sortedRanges.length && sortedRanges[j].start <= range.endExclusive) {
+        j++;
+      }
+      if (i === j) {
+        sortedRanges.splice(i, 0, range);
+      } else {
+        const start = Math.min(range.start, sortedRanges[i].start);
+        const end = Math.max(range.endExclusive, sortedRanges[j - 1].endExclusive);
+        sortedRanges.splice(i, j - i, new OffsetRange(start, end));
+      }
+    }
     static tryCreate(start, endExclusive) {
       if (start > endExclusive) {
         return void 0;
@@ -8104,9 +8277,9 @@
     join(other) {
       return new OffsetRange(Math.min(this.start, other.start), Math.max(this.endExclusive, other.endExclusive));
     }
-    intersect(seq1Range) {
-      const start = Math.max(this.start, seq1Range.start);
-      const end = Math.min(this.endExclusive, seq1Range.endExclusive);
+    intersect(other) {
+      const start = Math.max(this.start, other.start);
+      const end = Math.min(this.endExclusive, other.endExclusive);
       if (start <= end) {
         return new OffsetRange(start, end);
       }
@@ -8853,9 +9026,552 @@
 
   // node_modules/monaco-editor/esm/vs/editor/common/diff/linesDiffComputers.js
   var linesDiffComputers = {
-    smart: new SmartLinesDiffComputer(),
-    experimental: new StandardLinesDiffComputer()
+    legacy: new SmartLinesDiffComputer(),
+    advanced: new StandardLinesDiffComputer()
   };
+
+  // node_modules/monaco-editor/esm/vs/base/common/color.js
+  function roundFloat(number, decimalPoints) {
+    const decimal = Math.pow(10, decimalPoints);
+    return Math.round(number * decimal) / decimal;
+  }
+  var RGBA = class {
+    constructor(r, g, b, a2 = 1) {
+      this._rgbaBrand = void 0;
+      this.r = Math.min(255, Math.max(0, r)) | 0;
+      this.g = Math.min(255, Math.max(0, g)) | 0;
+      this.b = Math.min(255, Math.max(0, b)) | 0;
+      this.a = roundFloat(Math.max(Math.min(1, a2), 0), 3);
+    }
+    static equals(a2, b) {
+      return a2.r === b.r && a2.g === b.g && a2.b === b.b && a2.a === b.a;
+    }
+  };
+  var HSLA = class {
+    constructor(h, s, l, a2) {
+      this._hslaBrand = void 0;
+      this.h = Math.max(Math.min(360, h), 0) | 0;
+      this.s = roundFloat(Math.max(Math.min(1, s), 0), 3);
+      this.l = roundFloat(Math.max(Math.min(1, l), 0), 3);
+      this.a = roundFloat(Math.max(Math.min(1, a2), 0), 3);
+    }
+    static equals(a2, b) {
+      return a2.h === b.h && a2.s === b.s && a2.l === b.l && a2.a === b.a;
+    }
+    static fromRGBA(rgba) {
+      const r = rgba.r / 255;
+      const g = rgba.g / 255;
+      const b = rgba.b / 255;
+      const a2 = rgba.a;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h = 0;
+      let s = 0;
+      const l = (min + max) / 2;
+      const chroma = max - min;
+      if (chroma > 0) {
+        s = Math.min(l <= 0.5 ? chroma / (2 * l) : chroma / (2 - 2 * l), 1);
+        switch (max) {
+          case r:
+            h = (g - b) / chroma + (g < b ? 6 : 0);
+            break;
+          case g:
+            h = (b - r) / chroma + 2;
+            break;
+          case b:
+            h = (r - g) / chroma + 4;
+            break;
+        }
+        h *= 60;
+        h = Math.round(h);
+      }
+      return new HSLA(h, s, l, a2);
+    }
+    static _hue2rgb(p, q, t) {
+      if (t < 0) {
+        t += 1;
+      }
+      if (t > 1) {
+        t -= 1;
+      }
+      if (t < 1 / 6) {
+        return p + (q - p) * 6 * t;
+      }
+      if (t < 1 / 2) {
+        return q;
+      }
+      if (t < 2 / 3) {
+        return p + (q - p) * (2 / 3 - t) * 6;
+      }
+      return p;
+    }
+    static toRGBA(hsla) {
+      const h = hsla.h / 360;
+      const { s, l, a: a2 } = hsla;
+      let r, g, b;
+      if (s === 0) {
+        r = g = b = l;
+      } else {
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = HSLA._hue2rgb(p, q, h + 1 / 3);
+        g = HSLA._hue2rgb(p, q, h);
+        b = HSLA._hue2rgb(p, q, h - 1 / 3);
+      }
+      return new RGBA(Math.round(r * 255), Math.round(g * 255), Math.round(b * 255), a2);
+    }
+  };
+  var HSVA = class {
+    constructor(h, s, v, a2) {
+      this._hsvaBrand = void 0;
+      this.h = Math.max(Math.min(360, h), 0) | 0;
+      this.s = roundFloat(Math.max(Math.min(1, s), 0), 3);
+      this.v = roundFloat(Math.max(Math.min(1, v), 0), 3);
+      this.a = roundFloat(Math.max(Math.min(1, a2), 0), 3);
+    }
+    static equals(a2, b) {
+      return a2.h === b.h && a2.s === b.s && a2.v === b.v && a2.a === b.a;
+    }
+    static fromRGBA(rgba) {
+      const r = rgba.r / 255;
+      const g = rgba.g / 255;
+      const b = rgba.b / 255;
+      const cmax = Math.max(r, g, b);
+      const cmin = Math.min(r, g, b);
+      const delta = cmax - cmin;
+      const s = cmax === 0 ? 0 : delta / cmax;
+      let m;
+      if (delta === 0) {
+        m = 0;
+      } else if (cmax === r) {
+        m = ((g - b) / delta % 6 + 6) % 6;
+      } else if (cmax === g) {
+        m = (b - r) / delta + 2;
+      } else {
+        m = (r - g) / delta + 4;
+      }
+      return new HSVA(Math.round(m * 60), s, cmax, rgba.a);
+    }
+    static toRGBA(hsva) {
+      const { h, s, v, a: a2 } = hsva;
+      const c = v * s;
+      const x = c * (1 - Math.abs(h / 60 % 2 - 1));
+      const m = v - c;
+      let [r, g, b] = [0, 0, 0];
+      if (h < 60) {
+        r = c;
+        g = x;
+      } else if (h < 120) {
+        r = x;
+        g = c;
+      } else if (h < 180) {
+        g = c;
+        b = x;
+      } else if (h < 240) {
+        g = x;
+        b = c;
+      } else if (h < 300) {
+        r = x;
+        b = c;
+      } else if (h <= 360) {
+        r = c;
+        b = x;
+      }
+      r = Math.round((r + m) * 255);
+      g = Math.round((g + m) * 255);
+      b = Math.round((b + m) * 255);
+      return new RGBA(r, g, b, a2);
+    }
+  };
+  var Color = class {
+    static fromHex(hex) {
+      return Color.Format.CSS.parseHex(hex) || Color.red;
+    }
+    static equals(a2, b) {
+      if (!a2 && !b) {
+        return true;
+      }
+      if (!a2 || !b) {
+        return false;
+      }
+      return a2.equals(b);
+    }
+    get hsla() {
+      if (this._hsla) {
+        return this._hsla;
+      } else {
+        return HSLA.fromRGBA(this.rgba);
+      }
+    }
+    get hsva() {
+      if (this._hsva) {
+        return this._hsva;
+      }
+      return HSVA.fromRGBA(this.rgba);
+    }
+    constructor(arg) {
+      if (!arg) {
+        throw new Error("Color needs a value");
+      } else if (arg instanceof RGBA) {
+        this.rgba = arg;
+      } else if (arg instanceof HSLA) {
+        this._hsla = arg;
+        this.rgba = HSLA.toRGBA(arg);
+      } else if (arg instanceof HSVA) {
+        this._hsva = arg;
+        this.rgba = HSVA.toRGBA(arg);
+      } else {
+        throw new Error("Invalid color ctor argument");
+      }
+    }
+    equals(other) {
+      return !!other && RGBA.equals(this.rgba, other.rgba) && HSLA.equals(this.hsla, other.hsla) && HSVA.equals(this.hsva, other.hsva);
+    }
+    getRelativeLuminance() {
+      const R = Color._relativeLuminanceForComponent(this.rgba.r);
+      const G = Color._relativeLuminanceForComponent(this.rgba.g);
+      const B = Color._relativeLuminanceForComponent(this.rgba.b);
+      const luminance = 0.2126 * R + 0.7152 * G + 0.0722 * B;
+      return roundFloat(luminance, 4);
+    }
+    static _relativeLuminanceForComponent(color) {
+      const c = color / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    }
+    isLighter() {
+      const yiq = (this.rgba.r * 299 + this.rgba.g * 587 + this.rgba.b * 114) / 1e3;
+      return yiq >= 128;
+    }
+    isLighterThan(another) {
+      const lum1 = this.getRelativeLuminance();
+      const lum2 = another.getRelativeLuminance();
+      return lum1 > lum2;
+    }
+    isDarkerThan(another) {
+      const lum1 = this.getRelativeLuminance();
+      const lum2 = another.getRelativeLuminance();
+      return lum1 < lum2;
+    }
+    lighten(factor) {
+      return new Color(new HSLA(this.hsla.h, this.hsla.s, this.hsla.l + this.hsla.l * factor, this.hsla.a));
+    }
+    darken(factor) {
+      return new Color(new HSLA(this.hsla.h, this.hsla.s, this.hsla.l - this.hsla.l * factor, this.hsla.a));
+    }
+    transparent(factor) {
+      const { r, g, b, a: a2 } = this.rgba;
+      return new Color(new RGBA(r, g, b, a2 * factor));
+    }
+    isTransparent() {
+      return this.rgba.a === 0;
+    }
+    isOpaque() {
+      return this.rgba.a === 1;
+    }
+    opposite() {
+      return new Color(new RGBA(255 - this.rgba.r, 255 - this.rgba.g, 255 - this.rgba.b, this.rgba.a));
+    }
+    makeOpaque(opaqueBackground) {
+      if (this.isOpaque() || opaqueBackground.rgba.a !== 1) {
+        return this;
+      }
+      const { r, g, b, a: a2 } = this.rgba;
+      return new Color(new RGBA(opaqueBackground.rgba.r - a2 * (opaqueBackground.rgba.r - r), opaqueBackground.rgba.g - a2 * (opaqueBackground.rgba.g - g), opaqueBackground.rgba.b - a2 * (opaqueBackground.rgba.b - b), 1));
+    }
+    toString() {
+      if (!this._toString) {
+        this._toString = Color.Format.CSS.format(this);
+      }
+      return this._toString;
+    }
+    static getLighterColor(of, relative2, factor) {
+      if (of.isLighterThan(relative2)) {
+        return of;
+      }
+      factor = factor ? factor : 0.5;
+      const lum1 = of.getRelativeLuminance();
+      const lum2 = relative2.getRelativeLuminance();
+      factor = factor * (lum2 - lum1) / lum2;
+      return of.lighten(factor);
+    }
+    static getDarkerColor(of, relative2, factor) {
+      if (of.isDarkerThan(relative2)) {
+        return of;
+      }
+      factor = factor ? factor : 0.5;
+      const lum1 = of.getRelativeLuminance();
+      const lum2 = relative2.getRelativeLuminance();
+      factor = factor * (lum1 - lum2) / lum1;
+      return of.darken(factor);
+    }
+  };
+  Color.white = new Color(new RGBA(255, 255, 255, 1));
+  Color.black = new Color(new RGBA(0, 0, 0, 1));
+  Color.red = new Color(new RGBA(255, 0, 0, 1));
+  Color.blue = new Color(new RGBA(0, 0, 255, 1));
+  Color.green = new Color(new RGBA(0, 255, 0, 1));
+  Color.cyan = new Color(new RGBA(0, 255, 255, 1));
+  Color.lightgrey = new Color(new RGBA(211, 211, 211, 1));
+  Color.transparent = new Color(new RGBA(0, 0, 0, 0));
+  (function(Color3) {
+    let Format;
+    (function(Format2) {
+      let CSS;
+      (function(CSS2) {
+        function formatRGB(color) {
+          if (color.rgba.a === 1) {
+            return `rgb(${color.rgba.r}, ${color.rgba.g}, ${color.rgba.b})`;
+          }
+          return Color3.Format.CSS.formatRGBA(color);
+        }
+        CSS2.formatRGB = formatRGB;
+        function formatRGBA(color) {
+          return `rgba(${color.rgba.r}, ${color.rgba.g}, ${color.rgba.b}, ${+color.rgba.a.toFixed(2)})`;
+        }
+        CSS2.formatRGBA = formatRGBA;
+        function formatHSL(color) {
+          if (color.hsla.a === 1) {
+            return `hsl(${color.hsla.h}, ${(color.hsla.s * 100).toFixed(2)}%, ${(color.hsla.l * 100).toFixed(2)}%)`;
+          }
+          return Color3.Format.CSS.formatHSLA(color);
+        }
+        CSS2.formatHSL = formatHSL;
+        function formatHSLA(color) {
+          return `hsla(${color.hsla.h}, ${(color.hsla.s * 100).toFixed(2)}%, ${(color.hsla.l * 100).toFixed(2)}%, ${color.hsla.a.toFixed(2)})`;
+        }
+        CSS2.formatHSLA = formatHSLA;
+        function _toTwoDigitHex(n) {
+          const r = n.toString(16);
+          return r.length !== 2 ? "0" + r : r;
+        }
+        function formatHex(color) {
+          return `#${_toTwoDigitHex(color.rgba.r)}${_toTwoDigitHex(color.rgba.g)}${_toTwoDigitHex(color.rgba.b)}`;
+        }
+        CSS2.formatHex = formatHex;
+        function formatHexA(color, compact = false) {
+          if (compact && color.rgba.a === 1) {
+            return Color3.Format.CSS.formatHex(color);
+          }
+          return `#${_toTwoDigitHex(color.rgba.r)}${_toTwoDigitHex(color.rgba.g)}${_toTwoDigitHex(color.rgba.b)}${_toTwoDigitHex(Math.round(color.rgba.a * 255))}`;
+        }
+        CSS2.formatHexA = formatHexA;
+        function format4(color) {
+          if (color.isOpaque()) {
+            return Color3.Format.CSS.formatHex(color);
+          }
+          return Color3.Format.CSS.formatRGBA(color);
+        }
+        CSS2.format = format4;
+        function parseHex(hex) {
+          const length = hex.length;
+          if (length === 0) {
+            return null;
+          }
+          if (hex.charCodeAt(0) !== 35) {
+            return null;
+          }
+          if (length === 7) {
+            const r = 16 * _parseHexDigit(hex.charCodeAt(1)) + _parseHexDigit(hex.charCodeAt(2));
+            const g = 16 * _parseHexDigit(hex.charCodeAt(3)) + _parseHexDigit(hex.charCodeAt(4));
+            const b = 16 * _parseHexDigit(hex.charCodeAt(5)) + _parseHexDigit(hex.charCodeAt(6));
+            return new Color3(new RGBA(r, g, b, 1));
+          }
+          if (length === 9) {
+            const r = 16 * _parseHexDigit(hex.charCodeAt(1)) + _parseHexDigit(hex.charCodeAt(2));
+            const g = 16 * _parseHexDigit(hex.charCodeAt(3)) + _parseHexDigit(hex.charCodeAt(4));
+            const b = 16 * _parseHexDigit(hex.charCodeAt(5)) + _parseHexDigit(hex.charCodeAt(6));
+            const a2 = 16 * _parseHexDigit(hex.charCodeAt(7)) + _parseHexDigit(hex.charCodeAt(8));
+            return new Color3(new RGBA(r, g, b, a2 / 255));
+          }
+          if (length === 4) {
+            const r = _parseHexDigit(hex.charCodeAt(1));
+            const g = _parseHexDigit(hex.charCodeAt(2));
+            const b = _parseHexDigit(hex.charCodeAt(3));
+            return new Color3(new RGBA(16 * r + r, 16 * g + g, 16 * b + b));
+          }
+          if (length === 5) {
+            const r = _parseHexDigit(hex.charCodeAt(1));
+            const g = _parseHexDigit(hex.charCodeAt(2));
+            const b = _parseHexDigit(hex.charCodeAt(3));
+            const a2 = _parseHexDigit(hex.charCodeAt(4));
+            return new Color3(new RGBA(16 * r + r, 16 * g + g, 16 * b + b, (16 * a2 + a2) / 255));
+          }
+          return null;
+        }
+        CSS2.parseHex = parseHex;
+        function _parseHexDigit(charCode) {
+          switch (charCode) {
+            case 48:
+              return 0;
+            case 49:
+              return 1;
+            case 50:
+              return 2;
+            case 51:
+              return 3;
+            case 52:
+              return 4;
+            case 53:
+              return 5;
+            case 54:
+              return 6;
+            case 55:
+              return 7;
+            case 56:
+              return 8;
+            case 57:
+              return 9;
+            case 97:
+              return 10;
+            case 65:
+              return 10;
+            case 98:
+              return 11;
+            case 66:
+              return 11;
+            case 99:
+              return 12;
+            case 67:
+              return 12;
+            case 100:
+              return 13;
+            case 68:
+              return 13;
+            case 101:
+              return 14;
+            case 69:
+              return 14;
+            case 102:
+              return 15;
+            case 70:
+              return 15;
+          }
+          return 0;
+        }
+      })(CSS = Format2.CSS || (Format2.CSS = {}));
+    })(Format = Color3.Format || (Color3.Format = {}));
+  })(Color || (Color = {}));
+
+  // node_modules/monaco-editor/esm/vs/editor/common/languages/defaultDocumentColorsComputer.js
+  function _parseCaptureGroups(captureGroups) {
+    const values = [];
+    for (const captureGroup of captureGroups) {
+      const parsedNumber = Number(captureGroup);
+      if (parsedNumber || parsedNumber === 0 && captureGroup.replace(/\s/g, "") !== "") {
+        values.push(parsedNumber);
+      }
+    }
+    return values;
+  }
+  function _toIColor(r, g, b, a2) {
+    return {
+      red: r / 255,
+      blue: b / 255,
+      green: g / 255,
+      alpha: a2
+    };
+  }
+  function _findRange(model, match) {
+    const index = match.index;
+    const length = match[0].length;
+    if (!index) {
+      return;
+    }
+    const startPosition = model.positionAt(index);
+    const range = {
+      startLineNumber: startPosition.lineNumber,
+      startColumn: startPosition.column,
+      endLineNumber: startPosition.lineNumber,
+      endColumn: startPosition.column + length
+    };
+    return range;
+  }
+  function _findHexColorInformation(range, hexValue) {
+    if (!range) {
+      return;
+    }
+    const parsedHexColor = Color.Format.CSS.parseHex(hexValue);
+    if (!parsedHexColor) {
+      return;
+    }
+    return {
+      range,
+      color: _toIColor(parsedHexColor.rgba.r, parsedHexColor.rgba.g, parsedHexColor.rgba.b, parsedHexColor.rgba.a)
+    };
+  }
+  function _findRGBColorInformation(range, matches, isAlpha) {
+    if (!range || matches.length !== 1) {
+      return;
+    }
+    const match = matches[0];
+    const captureGroups = match.values();
+    const parsedRegex = _parseCaptureGroups(captureGroups);
+    return {
+      range,
+      color: _toIColor(parsedRegex[0], parsedRegex[1], parsedRegex[2], isAlpha ? parsedRegex[3] : 1)
+    };
+  }
+  function _findHSLColorInformation(range, matches, isAlpha) {
+    if (!range || matches.length !== 1) {
+      return;
+    }
+    const match = matches[0];
+    const captureGroups = match.values();
+    const parsedRegex = _parseCaptureGroups(captureGroups);
+    const colorEquivalent = new Color(new HSLA(parsedRegex[0], parsedRegex[1] / 100, parsedRegex[2] / 100, isAlpha ? parsedRegex[3] : 1));
+    return {
+      range,
+      color: _toIColor(colorEquivalent.rgba.r, colorEquivalent.rgba.g, colorEquivalent.rgba.b, colorEquivalent.rgba.a)
+    };
+  }
+  function _findMatches(model, regex) {
+    if (typeof model === "string") {
+      return [...model.matchAll(regex)];
+    } else {
+      return model.findMatches(regex);
+    }
+  }
+  function computeColors(model) {
+    const result = [];
+    const initialValidationRegex = /\b(rgb|rgba|hsl|hsla)(\([0-9\s,.\%]*\))|(#)([A-Fa-f0-9]{6})\b|(#)([A-Fa-f0-9]{8})\b/gm;
+    const initialValidationMatches = _findMatches(model, initialValidationRegex);
+    if (initialValidationMatches.length > 0) {
+      for (const initialMatch of initialValidationMatches) {
+        const initialCaptureGroups = initialMatch.filter((captureGroup) => captureGroup !== void 0);
+        const colorScheme = initialCaptureGroups[1];
+        const colorParameters = initialCaptureGroups[2];
+        if (!colorParameters) {
+          continue;
+        }
+        let colorInformation;
+        if (colorScheme === "rgb") {
+          const regexParameters = /^\(\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\s*,\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\s*,\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\s*\)$/gm;
+          colorInformation = _findRGBColorInformation(_findRange(model, initialMatch), _findMatches(colorParameters, regexParameters), false);
+        } else if (colorScheme === "rgba") {
+          const regexParameters = /^\(\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\s*,\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\s*,\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]|[0-9])\s*,\s*(0[.][0-9]+|[.][0-9]+|[01][.]|[01])\s*\)$/gm;
+          colorInformation = _findRGBColorInformation(_findRange(model, initialMatch), _findMatches(colorParameters, regexParameters), true);
+        } else if (colorScheme === "hsl") {
+          const regexParameters = /^\(\s*(36[0]|3[0-5][0-9]|[12][0-9][0-9]|[1-9]?[0-9])\s*,\s*(100|\d{1,2}[.]\d*|\d{1,2})%\s*,\s*(100|\d{1,2}[.]\d*|\d{1,2})%\s*\)$/gm;
+          colorInformation = _findHSLColorInformation(_findRange(model, initialMatch), _findMatches(colorParameters, regexParameters), false);
+        } else if (colorScheme === "hsla") {
+          const regexParameters = /^\(\s*(36[0]|3[0-5][0-9]|[12][0-9][0-9]|[1-9]?[0-9])\s*,\s*(100|\d{1,2}[.]\d*|\d{1,2})%\s*,\s*(100|\d{1,2}[.]\d*|\d{1,2})%\s*,\s*(0[.][0-9]+|[.][0-9]+|[01][.]|[01])\s*\)$/gm;
+          colorInformation = _findHSLColorInformation(_findRange(model, initialMatch), _findMatches(colorParameters, regexParameters), true);
+        } else if (colorScheme === "#") {
+          colorInformation = _findHexColorInformation(_findRange(model, initialMatch), colorScheme + colorParameters);
+        }
+        if (colorInformation) {
+          result.push(colorInformation);
+        }
+      }
+    }
+    return result;
+  }
+  function computeDefaultDocumentColors(model) {
+    if (!model || typeof model.getValue !== "function" || typeof model.positionAt !== "function") {
+      return [];
+    }
+    return computeColors(model);
+  }
 
   // node_modules/monaco-editor/esm/vs/editor/common/services/editorSimpleWorker.js
   var __awaiter2 = function(thisArg, _arguments, P, generator) {
@@ -8894,6 +9610,21 @@
     }
     getValue() {
       return this.getText();
+    }
+    findMatches(regex) {
+      const matches = [];
+      for (let i = 0; i < this._lines.length; i++) {
+        const line = this._lines[i];
+        const offsetToAdd = this.offsetAt(new Position(i + 1, 1));
+        const iteratorOverMatches = line.matchAll(regex);
+        for (const match of iteratorOverMatches) {
+          if (match.index || match.index === 0) {
+            match.index = match.index + offsetToAdd;
+          }
+          matches.push(match);
+        }
+      }
+      return matches;
     }
     getLinesContent() {
       return this._lines.slice(0);
@@ -9094,7 +9825,7 @@
       });
     }
     static computeDiff(originalTextModel, modifiedTextModel, options, algorithm) {
-      const diffAlgorithm = algorithm === "experimental" ? linesDiffComputers.experimental : linesDiffComputers.smart;
+      const diffAlgorithm = algorithm === "advanced" ? linesDiffComputers.advanced : linesDiffComputers.legacy;
       const originalLines = originalTextModel.getLinesContent();
       const modifiedLines = modifiedTextModel.getLinesContent();
       const result = diffAlgorithm.computeDiff(originalLines, modifiedLines, options);
@@ -9191,6 +9922,15 @@
           return null;
         }
         return computeLinks(model);
+      });
+    }
+    computeDefaultDocumentColors(modelUrl) {
+      return __awaiter2(this, void 0, void 0, function* () {
+        const model = this._getModel(modelUrl);
+        if (!model) {
+          return null;
+        }
+        return computeDefaultDocumentColors(model);
       });
     }
     textualSuggest(modelUrls, leadingWord, wordDef, wordDefFlags) {
@@ -10384,8 +11124,8 @@
     }
     LocationLink2.is = is;
   })(LocationLink || (LocationLink = {}));
-  var Color;
-  (function(Color2) {
+  var Color2;
+  (function(Color22) {
     function create(red, green, blue, alpha) {
       return {
         red,
@@ -10394,13 +11134,13 @@
         alpha
       };
     }
-    Color2.create = create;
+    Color22.create = create;
     function is(value) {
       var candidate = value;
       return Is.numberRange(candidate.red, 0, 1) && Is.numberRange(candidate.green, 0, 1) && Is.numberRange(candidate.blue, 0, 1) && Is.numberRange(candidate.alpha, 0, 1);
     }
-    Color2.is = is;
-  })(Color || (Color = {}));
+    Color22.is = is;
+  })(Color2 || (Color2 = {}));
   var ColorInformation;
   (function(ColorInformation2) {
     function create(range, color) {
@@ -10412,7 +11152,7 @@
     ColorInformation2.create = create;
     function is(value) {
       var candidate = value;
-      return Range2.is(candidate.range) && Color.is(candidate.color);
+      return Range2.is(candidate.range) && Color2.is(candidate.color);
     }
     ColorInformation2.is = is;
   })(ColorInformation || (ColorInformation = {}));
@@ -16578,7 +17318,7 @@
 })();
 /*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
- * Version: 0.37.0-dev.20230330(e531b5c3378451182ccd9db0efae8326edfd86c8)
+ * Version: 0.39.0(ff3621a3fa6389873be5412d17554294ea1b0941)
  * Released under the MIT license
  * https://github.com/microsoft/monaco-editor/blob/main/LICENSE.txt
  *-----------------------------------------------------------------------------*/

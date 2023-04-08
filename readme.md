@@ -1,21 +1,16 @@
 <div align='center'>
 
 <h1>TypeBox Workbench</h1>
-
-<p>Transform TypeScript Types to TypeBox or JSON Schema</p>
 	
-<a href="https://sinclairzx81.github.io/typebox-workbench/"><img src="typebox.png" /></a>
-
-<br />
-<br />
+<a href="https://sinclairzx81.github.io/typebox-workbench/"><img src="workbench.png" /></a>
 
 </div>
 
 ## Overview
 
-TypeBox Workbench is a web based compiler tool that will transform TypeScript type definitions into TypeBox types or JSON Schema schematics. This tool is written to assert TypeBox alignment with TypeScript as well as to help prototype future enhancements to TypeBox library. TypeBox Workbench is also written to be a general purpose tool to rapidly convert existing TypeScript definitions into TypeBox types.
+TypeBox Workbench is a browser based compiler tool that transforms TypeScript types into TypeBox types as well as types for several other ecosystem libraries. The tool is mostly written as a prototyping and debugging utility for TypeBox, but can be used as a simple copy paste utility to quickly convert existing TS types into runtime safe types.
 
-[TypeBox WorkBench Link](https://sinclairzx81.github.io/typebox-workbench/)
+[TypeBox WorkBench Here](https://sinclairzx81.github.io/typebox-workbench/)
 
 License MIT
 

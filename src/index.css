@@ -2,20 +2,26 @@
   font-family: 'conthrax';
   src: url('./assets/fonts/font.ttf');
 }
+:root {
+  --background-color: #010409;
+  --outline-color: #ffa500;
+  --control-default-color: #111;
+  --control-selected-color: #222;
+}
 html,
 body {
   padding: 0;
   margin: 0;
   width: 100%;
   height: 100%;
-  background-color: #292d3e;
+  background-color: var(--background-color);
+  overflow: hidden;
 }
 #container {
   width: 100%;
   height: 100%;
 }
-
-/** ----------------------------------------------------
+/* ----------------------------------------------------
  App
 ------------------------------------------------------ */
 .app {
@@ -24,43 +30,93 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+/* ----------------------------------------------------
+APP HEADER 
+------------------------------------------------------ */
 .app > .header {
   font-family: conthrax;
   width: 100%;
-  height: 72px;
-  background-color: #25293a;
-  border-bottom: 1px solid #ffa500;
+  height: 80px;
+  min-height: 80px;
+  background-color: var(--background-color);
+  border-bottom: 1px solid var(--outline-color);
+  display: flex;
+  flex-direction: row;
 }
-.app > .header h1,
+.app > .header > .left {
+  width: 80px;
+  height: 100%;
+}
+.app > .header > .left a > .logo {
+  background-image: url('./assets/images/typebox-control.png');
+  background-size: 64px;
+  margin: calc((80px - 64px) / 2);
+  width: 64px;
+  height: 64px;
+}
+.app > .header > .middle {
+  width: calc(100%);
+  height: 100%;
+  white-space: nowrap;
+}
+.app > .header > .middle > h1,
 h2 {
   margin: 0;
-  margin-left: 24px;
   padding: 0;
-  height: 48px;
-  line-height: 48px;
-
-  color: #ffa500;
+  margin-top: 12px;
+  height: 38px;
+  line-height: 38px;
+  color: #ccc;
 }
-.app > .header p {
+.app > .header > .middle > p {
+  display: block;
+  float: left;
   margin: 0;
-  margin-left: 24px;
   padding: 0;
-  color: #aaa;
+  color: #999;
   font-size: 0.8em;
 }
+.app > .header > .right {
+  width: 80px;
+  height: 100%;
+}
+.app > .header > .right > a {
+  display: block;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%; /* Ensure the container takes up the full height of the anchor element */
+  text-decoration: none; /* Remove underline from anchor element */
+}
+.app > .header > .right > a > img {
+  width: 32px;
+  height: 32px;
+  text-align: center;
+}
+/* ----------------------------------------------------
+APP BODY 
+------------------------------------------------------ */
 .app > .body {
   margin-top: 8px;
   width: 100%;
   height: calc(100% - 72px - 8px - 32px);
 }
+/* ----------------------------------------------------
+APP FOOTER
+------------------------------------------------------ */
 .app > .footer {
+  text-align: center;
   margin-top: 8px;
   width: 100%;
   height: 32px;
-  background-color: #25293a;
-  border-top: solid 1px #ffa500;
+  min-height: 32px;
+  background-color: var(--background-color);
+  border-top: solid 1px var(--outline-color);
 }
-.app > .footer p {
+.app > .footer span {
   font-family: conthrax;
   font-size: 0.8em;
   color: #aaa;
@@ -70,17 +126,18 @@ h2 {
   height: 32px;
   line-height: 32px;
 }
-/** ----------------------------------------------------
+/* ----------------------------------------------------
  Splitter
 ------------------------------------------------------ */
 .splitter .gutter {
-  background: #25293a;
+  background: #111;
   transition: background 0.25s ease-in;
+  overflow: hidden;
 }
 .splitter .gutter:hover {
-  background: #3c425c;
+  background: #111;
   transition: background 0.25s ease-in;
-  border: 1px solid #ffa500;
+  border: 1px solid var(--outline-color);
   border-radius: 4px;
 }
 /** ----------------------------------------------------
@@ -117,33 +174,88 @@ h2 {
   height: 100%;
 }
 .editor .target-container .target-controls {
+  background-color: #020202;
   margin-left: 12px;
   width: 56px;
+  min-width: 56px;
   height: 100%;
   display: flex;
   flex-direction: column;
+  overflow-y: hidden;
+}
+.editor .target-container .target-name {
+  background-color: #020202;
+  font-family: conthrax;
+  width: 32px;
+  margin-top: 8px;
+  line-height: 32px;
+  writing-mode: vertical-rl;
+  text-orientation: sideways;
+  user-select: none;
+  color: #aaa;
 }
 .editor .target-container .target-controls .control {
+  transition: all ease 0.5s;
   width: 48px;
   height: 48px;
+  min-height: 48px;
   user-select: none;
   border-radius: 4px;
   border: 1px solid #aaa;
-  background-color: #292d3e;
+  background-color: var(--control-default-color);
   margin-bottom: 8px;
 }
-.editor .target-container .target-controls .control:nth-child(1) {
+.editor .target-container .target-controls .control.separator {
+  height: 4px;
+  border-radius: 4px;
+  min-height: 1px;
+  border: #ffa500 1px solid;
+  cursor: default;
+}
+.editor .target-container .target-controls .control.typebox {
   background-image: url('./assets/images/typebox-control.png');
   background-size: 48px;
 }
-.editor .target-container .target-controls .control:nth-child(2) {
+.editor .target-container .target-controls .control.zod {
+  background-image: url('./assets/images/zod-control.png');
+  background-size: 48px;
+}
+.editor .target-container .target-controls .control.yup {
+  background-image: url('./assets/images/yup-control.png');
+  background-size: 48px;
+}
+.editor .target-container .target-controls .control.iots {
+  background-image: url('./assets/images/iots-control.png');
+  background-size: 48px;
+}
+.editor .target-container .target-controls .control.expr {
+  background-image: url('./assets/images/expr-control.png');
+  background-size: 48px;
+}
+.editor .target-container .target-controls .control.arktype {
+  background-image: url('./assets/images/arktype-control.png');
+  background-size: 48px;
+}
+.editor .target-container .target-controls .control.jsonschema {
   background-image: url('./assets/images/jsonschema-control.png');
+  background-size: 48px;
+}
+.editor .target-container .target-controls .control.value {
+  background-image: url('./assets/images/value-control.png');
+  background-size: 48px;
+}
+.editor .target-container .target-controls .control.javascript {
+  background-image: url('./assets/images/javascript-control.png');
+  background-size: 48px;
+}
+.editor .target-container .target-controls .control.typescript {
+  background-image: url('./assets/images/typescript-control.png');
   background-size: 48px;
 }
 .editor .target-container .target-controls .control:hover {
   cursor: pointer;
 }
 .editor .target-container .target-controls .control.selected {
-  background-color: #25293a;
-  border: 1px solid #ffa500;
+  background-color: var(--control-selected-color);
+  border: 1px solid var(--outline-color);
 }

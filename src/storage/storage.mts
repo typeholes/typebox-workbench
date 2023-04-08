@@ -4,7 +4,7 @@
 
 The MIT License (MIT)
 
-Copyright (c) 2017-2023 Haydn Paterson (sinclair) <haydn.developer@gmail.com>
+Copyright (c) 2023 Haydn Paterson (sinclair) <haydn.developer@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,8 +26,27 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+export type TransformType = 'typebox' | 'jsonschema' | 'javascript' | 'typescript' | 'value' | 'zod' | 'arktype' | 'iots' | 'yup' | 'expr'
+
 export namespace Storage {
-  const defaultCode = [`// Edit TypeScript Types Here`, '', `export interface Vector {`, `  x: number`, `  y: number`, `  z: number`, `}`].join('\n')
+  // prettier-ignore
+  const defaultCode = [
+    `// Edit TypeScript Types Here. Use Ctrl + S to Share`, 
+    '', 
+    `export interface Vector {`, 
+    `  /**`,
+    `   * @minimum 0`,
+    `   * @maximum 1`,
+    `   * @default 0`,
+    `   */`,
+    `  x: number`,
+    `  /**`,
+    `   * @minimum 0`,
+    `   * @maximum 1`,
+    `   * @default 1`,
+    `   */`,
+    `  y: number`,
+    `}`].join('\n')
   function ensure(key: string, value: string) {
     const item = globalThis.localStorage.getItem(key)
     if (typeof item === 'string') return
@@ -37,20 +56,20 @@ export namespace Storage {
   // TransformSourceCode: Used to persist source for refresh
   // --------------------------------------------------------------------------
   export function getTransformSourceCode(): string {
-    ensure('typebox-workbench:transform-source-code', defaultCode)
-    return globalThis.localStorage.getItem('typebox-workbench:transform-source-code')!
+    ensure('typebox-transform:transform-source-code', defaultCode)
+    return globalThis.localStorage.getItem('typebox-transform:transform-source-code')!
   }
   export function setTransformSourceCode(value: string): void {
-    globalThis.localStorage.setItem('typebox-workbench:transform-source-code', value)
+    globalThis.localStorage.setItem('typebox-transform:transform-source-code', value)
   }
   // --------------------------------------------------------------------------
   // TransformTargetType: Used to persist the target type between refreshes
   // --------------------------------------------------------------------------
-  export function getTransformTargetType(): 'typebox' | 'jsonschema' {
-    ensure('typebox-workbench:transform-target-type', 'typebox')
-    return globalThis.localStorage.getItem('typebox-workbench:transform-target-type')! as 'typebox' | 'jsonschema'
+  export function getTransformTargetType(): TransformType {
+    ensure('typebox-transform:transform-target-type', 'typebox')
+    return globalThis.localStorage.getItem('typebox-transform:transform-target-type')! as TransformType
   }
-  export function setTransformTargetType(value: 'typebox' | 'jsonschema'): void {
-    globalThis.localStorage.setItem('typebox-workbench:transform-target-type', value)
+  export function setTransformTargetType(value: TransformType): void {
+    globalThis.localStorage.setItem('typebox-transform:transform-target-type', value)
   }
 }
