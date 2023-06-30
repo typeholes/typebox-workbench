@@ -25,7 +25,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { TypeBoxModel } from './model'
-import { Expression } from '../expr/index'
+import { Expression } from '../expression/index'
 import { TypeSystem } from '@sinclair/typebox/system'
 import * as Types from '@sinclair/typebox'
 import { Formatter } from '../common/formatter'
@@ -35,7 +35,7 @@ export class TypeTransformUnknownSchemaError extends Error {
     super('TypeTransformUnknownSchemaError: Unknown schema')
   }
 }
-export namespace TypeBoxToExpr {
+export namespace TypeBoxToExpression {
   // --------------------------------------------------------------
   // Guards
   // --------------------------------------------------------------
@@ -58,25 +58,19 @@ export namespace TypeBoxToExpr {
   // --------------------------------------------------------------
   // Conditional: If Then Else
   // --------------------------------------------------------------
-  function* Conditional(schema: Types.TSchema, references: Types.TSchema[]): IterableIterator<Expression> {
-    if (IsUndefined(schema.if)) return
-    const if_expression = Visit(schema.if, references)
-    const then_expression = IsUndefined(schema.then) ? Expression.True() : Visit(schema.then, references)
-    const else_expression = IsUndefined(schema.else) ? Expression.True() : Visit(schema.else, references)
-    yield Expression.IfThenElse(if_expression, then_expression, else_expression)
-  }
+  // function* Conditional(schema: Types.TSchema, references: Types.TSchema[]): IterableIterator<Expression> {
+  //   if (IsUndefined(schema.if)) return
+  //   const if_expression = Visit(schema.if, references)
+  //   const then_expression = IsUndefined(schema.then) ? Expression.True() : Visit(schema.then, references)
+  //   const else_expression = IsUndefined(schema.else) ? Expression.True() : Visit(schema.else, references)
+  //   yield Expression.IfThenElse(if_expression, then_expression, else_expression)
+  // }
 
   // --------------------------------------------------------------
   // Transform
   // --------------------------------------------------------------
   function Any(schema: Types.TAny, references: Types.TSchema[]): Expression {
-    return Expression.And(
-      function* () {
-        yield Expression.True()
-        yield* Conditional(schema, references)
-      },
-      { $id: schema.$id },
-    )
+    return Expression.True({ $id: schema.$id })
   }
   function Array(schema: Types.TArray, references: Types.TSchema[]) {
     return Expression.And(
@@ -86,51 +80,30 @@ export namespace TypeBoxToExpr {
         if (IsNumber(schema.minItems)) yield Expression.Property('length', Expression.GreaterThanEqual(schema.minItems))
         yield Expression.Elements(Visit(schema.items, references))
         if (schema.uniqueItems === true) yield Expression.ElementsDistinct()
-        yield* Conditional(schema, references)
       },
       { $id: schema.$id },
     )
   }
   function Boolean(schema: Types.TBoolean, references: Types.TSchema[]): Expression {
-    return Expression.And(
-      function* () {
-        yield Expression.IsBoolean()
-        yield* Conditional(schema, references)
-      },
-      { $id: schema.$id },
-    )
+    return Expression.IsBoolean({ $id: schema.$id })
   }
   function Constructor(schema: Types.TConstructor, references: Types.TSchema[]): Expression {
-    return Expression.Property(
-      'prototype',
-      Expression.And(function* () {
-        yield Visit(schema.returns, references)
-        yield* Conditional(schema, references)
-      }),
-      { $id: schema.$id },
-    )
+    return Expression.Property('prototype', Visit(schema.returns, references), { $id: schema.$id })
   }
   function Date(schema: Types.TDate, references: Types.TSchema[]): Expression {
     return Expression.And(
       function* () {
-        yield Expression.InstanceOf(globalThis.Date)
+        yield Expression.InstanceOf('Date')
         if (IsNumber(schema.maximumTimestamp)) yield Expression.Call('getTime', [], Expression.LessThanEqual(schema.maximumTimestamp))
         if (IsNumber(schema.minimumTimestamp)) yield Expression.Call('getTime', [], Expression.GreaterThanEqual(schema.minimumTimestamp))
         if (IsNumber(schema.exclusiveMaximumTimestamp)) yield Expression.Call('getTime', [], Expression.LessThan(schema.exclusiveMaximumTimestamp))
         if (IsNumber(schema.exclusiveMinimumTimestamp)) yield Expression.Call('getTime', [], Expression.GreaterThan(schema.exclusiveMinimumTimestamp))
-        yield* Conditional(schema, references)
       },
       { $id: schema.$id },
     )
   }
   function Function(schema: Types.TFunction, references: Types.TSchema[]): Expression {
-    return Expression.And(
-      function* () {
-        yield Expression.IsFunction()
-        yield* Conditional(schema, references)
-      },
-      { $id: schema.$id },
-    )
+    return Expression.IsFunction({ $id: schema.$id })
   }
   function Intersect(schema: Types.TIntersect, references: Types.TSchema[]): Expression {
     return Expression.And(
@@ -138,7 +111,6 @@ export namespace TypeBoxToExpr {
         for (const inner of schema.allOf) {
           yield Visit(inner, references)
         }
-        yield* Conditional(schema, references)
       },
       { $id: schema.$id },
     )
@@ -152,7 +124,6 @@ export namespace TypeBoxToExpr {
         if (IsNumber(schema.minimum)) yield Expression.GreaterThanEqual(schema.minimum)
         if (IsNumber(schema.exclusiveMaximum)) yield Expression.LessThan(schema.exclusiveMaximum)
         if (IsNumber(schema.exclusiveMinimum)) yield Expression.GreaterThan(schema.exclusiveMinimum)
-        yield* Conditional(schema, references)
       },
       { $id: schema.$id },
     )
@@ -161,28 +132,15 @@ export namespace TypeBoxToExpr {
     return Expression.And(
       function* () {
         yield Expression.Equals(schema.const)
-        yield* Conditional(schema, references)
       },
       { $id: schema.$id },
     )
   }
   function Never(schema: Types.TNever, references: Types.TSchema[]): Expression {
-    return Expression.And(
-      function* () {
-        yield Expression.False()
-        yield* Conditional(schema, references)
-      },
-      { $id: schema.$id },
-    )
+    return Expression.False({ $id: schema.$id })
   }
   function Null(schema: Types.TNull, references: Types.TSchema[]): Expression {
-    return Expression.And(
-      function* () {
-        yield Expression.IsNull({ $id: schema.$id })
-        yield* Conditional(schema, references)
-      },
-      { $id: schema.$id },
-    )
+    return Expression.IsNull({ $id: schema.$id })
   }
   function Number(schema: Types.TNumber, references: Types.TSchema[]): Expression {
     return Expression.And(
@@ -194,7 +152,6 @@ export namespace TypeBoxToExpr {
         if (IsNumber(schema.minimum)) yield Expression.GreaterThanEqual(schema.minimum)
         if (IsNumber(schema.exclusiveMaximum)) yield Expression.LessThan(schema.exclusiveMaximum)
         if (IsNumber(schema.exclusiveMinimum)) yield Expression.GreaterThan(schema.exclusiveMinimum)
-        yield* Conditional(schema, references)
       },
       { $id: schema.$id },
     )
@@ -202,6 +159,8 @@ export namespace TypeBoxToExpr {
   function Object(schema: Types.TObject, references: Types.TSchema[]): Expression {
     const propertyKeys = globalThis.Object.getOwnPropertyNames(schema.properties)
     const requiredKeys = IsArray(schema.required) ? schema.required : []
+    const optionalKeys = new Set(propertyKeys)
+    requiredKeys.forEach((key) => optionalKeys.delete(key))
     return Expression.And(
       function* () {
         yield Expression.IsObject()
@@ -219,10 +178,12 @@ export namespace TypeBoxToExpr {
         if (IsObject(schema.additionalProperties)) {
           yield Expression.PropertiesExclude(propertyKeys, Visit(schema.additionalProperties, references))
         }
-        for (const propertyKey of propertyKeys) {
-          if (requiredKeys.includes(propertyKey)) {
-            yield Expression.Property(propertyKey, Visit(schema.properties[propertyKey], references))
-          } else {
+        for (const propertyKey of requiredKeys) {
+          yield Expression.Property(propertyKey, Visit(schema.properties[propertyKey], references))
+        }
+        for (const propertyKey of optionalKeys) {
+          yield Expression.Or(function* () {
+            yield Expression.Not(Expression.KeyIn(propertyKey))
             yield Expression.Property(
               propertyKey,
               Expression.Or(function* () {
@@ -230,9 +191,8 @@ export namespace TypeBoxToExpr {
                 yield Visit(schema.properties[propertyKey], references)
               }),
             )
-          }
+          })
         }
-        yield* Conditional(schema, references)
       },
       { $id: schema.$id },
     )
@@ -242,7 +202,6 @@ export namespace TypeBoxToExpr {
       function* () {
         yield Expression.IsObject()
         yield Expression.Property('then', Expression.IsFunction())
-        yield* Conditional(schema, references)
       },
       { $id: schema.$id },
     )
@@ -253,7 +212,7 @@ export namespace TypeBoxToExpr {
       function* () {
         yield Expression.IsObject()
         yield Expression.Not(Expression.IsNull())
-        yield Expression.Not(Expression.InstanceOf(globalThis.Date))
+        yield Expression.Not(Expression.InstanceOf('Date'))
         if (IsNumber(schema.minProperties)) yield Expression.PropertiesMinimum(schema.minProperties)
         if (IsNumber(schema.maxProperties)) yield Expression.PropertiesMaximum(schema.maxProperties)
         yield Expression.PropertiesIncludePattern(keyPattern, Visit(valueSchema, references))
@@ -263,28 +222,15 @@ export namespace TypeBoxToExpr {
         if (IsObject(schema.additionalProperties)) {
           yield Expression.PropertiesExcludePattern(keyPattern, Visit(schema.additionalProperties, references))
         }
-        yield* Conditional(schema, references)
       },
       { $id: schema.$id },
     )
   }
   function Ref(schema: Types.TRef<any>, references: Types.TSchema[]): Expression {
-    return Expression.And(
-      function* () {
-        yield Expression.Ref(schema.$ref)
-        yield* Conditional(schema, references)
-      },
-      { $id: schema.$id },
-    )
+    return Expression.Ref(schema.$ref)
   }
   function Self(schema: Types.TThis, references: Types.TSchema[]): Expression {
-    return Expression.And(
-      function* () {
-        yield Expression.Ref(schema.$ref)
-        yield* Conditional(schema, references)
-      },
-      { $id: schema.$id },
-    )
+    return Expression.Ref(schema.$ref, { $id: schema.$id })
   }
   function String(schema: Types.TString, references: Types.TSchema[]): Expression {
     return Expression.And(
@@ -293,10 +239,12 @@ export namespace TypeBoxToExpr {
         if (IsNumber(schema.minLength)) yield Expression.Property('length', Expression.GreaterThanEqual(schema.minLength))
         if (IsNumber(schema.maxLength)) yield Expression.Property('length', Expression.LessThanEqual(schema.maxLength))
         if (!IsUndefined(schema.pattern)) yield Expression.IsPattern(schema.pattern)
-        yield* Conditional(schema, references)
       },
       { $id: schema.$id },
     )
+  }
+  function TemplateLiteral(schema: Types.TTemplateLiteral, references: Types.TSchema[]): Expression {
+    return Expression.IsPattern(schema.pattern)
   }
   function Tuple(schema: Types.TTuple, references: Types.TSchema[]): Expression {
     return Expression.And(
@@ -309,16 +257,12 @@ export namespace TypeBoxToExpr {
             yield Expression.Index(index, Visit(schema.items![index], references))
           }
         })
-        yield* Conditional(schema, references)
       },
       { $id: schema.$id },
     )
   }
   function Undefined(schema: Types.TUndefined, references: Types.TSchema[]): Expression {
-    return Expression.And(function* () {
-      yield Expression.IsUndefined({ $id: schema.$id })
-      yield* Conditional(schema, references)
-    })
+    return Expression.IsUndefined({ $id: schema.$id })
   }
   function Union(schema: Types.TUnion<any[]>, references: Types.TSchema[]): Expression {
     return Expression.Or(
@@ -326,7 +270,6 @@ export namespace TypeBoxToExpr {
         for (const inner of schema.anyOf) {
           yield Visit(inner, references)
         }
-        yield* Conditional(schema, references)
       },
       { $id: schema.$id },
     )
@@ -334,10 +277,9 @@ export namespace TypeBoxToExpr {
   function Uint8Array(schema: Types.TUint8Array, references: Types.TSchema[]): Expression {
     return Expression.And(
       function* () {
-        yield Expression.InstanceOf(globalThis.Uint8Array)
+        yield Expression.InstanceOf('Uint8Array')
         if (IsNumber(schema.maxByteLength)) yield Expression.Property('length', Expression.LessThanEqual(schema.maxByteLength))
         if (IsNumber(schema.minByteLength)) yield Expression.Property('length', Expression.GreaterThanEqual(schema.minByteLength))
-        yield* Conditional(schema, references)
       },
       { $id: schema.$id },
     )
@@ -346,7 +288,6 @@ export namespace TypeBoxToExpr {
     return Expression.And(
       function* () {
         yield Expression.True({ $id: schema.$id })
-        yield* Conditional(schema, references)
       },
       { $id: schema.$id },
     )
@@ -355,13 +296,12 @@ export namespace TypeBoxToExpr {
     return Expression.And(
       function* () {
         yield Expression.IsNull({ $id: schema.$id })
-        yield* Conditional(schema, references)
       },
       { $id: schema.$id },
     )
   }
-  function Kind(schema: Types.TSchema, references: Types.TSchema[]): Expression {
-    return Expression.False({})
+  function Unresolved(schema: Types.TSchema, references: Types.TSchema[]): Expression {
+    return Expression.False({ unresolved: schema })
   }
   function Visit<T extends Types.TSchema>(schema: T, references: Types.TSchema[]): Expression {
     const anyReferences = schema.$id === undefined ? references : [schema, ...references]
@@ -403,6 +343,8 @@ export namespace TypeBoxToExpr {
         return Self(anySchema, anyReferences)
       case 'String':
         return String(anySchema, anyReferences)
+      case 'TemplateLiteral':
+        return TemplateLiteral(anySchema, anyReferences)
       case 'Tuple':
         return Tuple(anySchema, anyReferences)
       case 'Undefined':
@@ -416,7 +358,7 @@ export namespace TypeBoxToExpr {
       case 'Void':
         return Void(anySchema, anyReferences)
       default:
-        return Kind(anySchema, anyReferences)
+        return Unresolved(schema, anyReferences)
     }
   }
   /** Transforms a Type to an Expression */
@@ -429,7 +371,7 @@ export namespace ModelToExpr {
   export function Generate(model: TypeBoxModel): string {
     const definitions: string[] = []
     for (const type of model.types) {
-      const expression = TypeBoxToExpr.Transform(
+      const expression = TypeBoxToExpression.Transform(
         type,
         model.types.filter((t) => t.$id !== type.$id),
       )

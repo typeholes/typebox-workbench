@@ -212,44 +212,45 @@ APP FOOTER
   border: #ffa500 1px solid;
   cursor: default;
 }
-.editor .target-container .target-controls .control.typebox {
-  background-image: url('./assets/images/typebox-control.png');
+.editor .target-container .target-controls .control.arktype {
+  background-image: url('./assets/images/arktype-control.png');
   background-size: 48px;
 }
-.editor .target-container .target-controls .control.zod {
-  background-image: url('./assets/images/zod-control.png');
-  background-size: 48px;
-}
-.editor .target-container .target-controls .control.yup {
-  background-image: url('./assets/images/yup-control.png');
+.editor .target-container .target-controls .control.expression {
+  background-image: url('./assets/images/expression-control.png');
   background-size: 48px;
 }
 .editor .target-container .target-controls .control.iots {
   background-image: url('./assets/images/iots-control.png');
   background-size: 48px;
 }
-.editor .target-container .target-controls .control.expr {
-  background-image: url('./assets/images/expr-control.png');
-  background-size: 48px;
-}
-.editor .target-container .target-controls .control.arktype {
-  background-image: url('./assets/images/arktype-control.png');
+.editor .target-container .target-controls .control.javascript {
+  background-image: url('./assets/images/javascript-control.png');
   background-size: 48px;
 }
 .editor .target-container .target-controls .control.jsonschema {
   background-image: url('./assets/images/jsonschema-control.png');
   background-size: 48px;
 }
-.editor .target-container .target-controls .control.value {
-  background-image: url('./assets/images/value-control.png');
-  background-size: 48px;
-}
-.editor .target-container .target-controls .control.javascript {
-  background-image: url('./assets/images/javascript-control.png');
+.editor .target-container .target-controls .control.typebox {
+  background-image: url('./assets/images/typebox-control.png');
   background-size: 48px;
 }
 .editor .target-container .target-controls .control.typescript {
   background-image: url('./assets/images/typescript-control.png');
+  background-size: 48px;
+}
+.editor .target-container .target-controls .control.value {
+  background-image: url('./assets/images/value-control.png');
+  background-size: 48px;
+}
+
+.editor .target-container .target-controls .control.yup {
+  background-image: url('./assets/images/yup-control.png');
+  background-size: 48px;
+}
+.editor .target-container .target-controls .control.zod {
+  background-image: url('./assets/images/zod-control.png');
   background-size: 48px;
 }
 .editor .target-container .target-controls .control:hover {

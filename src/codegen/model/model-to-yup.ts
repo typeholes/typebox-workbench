@@ -132,7 +132,7 @@ export namespace ModelToYup {
     throw Error(`Unreachable`)
   }
   function Ref(schema: Types.TRef) {
-    return `${Type(schema, `y.mixed()`)} /* unsupported */`
+    return `${schema.$ref}`
   }
   function This(schema: Types.TThis) {
     return `${Type(schema, `y.mixed()`)} /* unsupported */`

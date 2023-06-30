@@ -83,19 +83,22 @@ export function Editor(props: EditorProperties) {
     if (targetEditor.current === null) return
     targetEditor.current.dispose()
   }
+  function useCyclicModel(type: TransformType) {
+    return type === 'arktype' || type === 'jsonschema' || type === 'expression'
+  }
   function buildTransform(type: TransformType, typescript: string): string {
-    const referenceModel = type === 'arktype' || type === 'jsonschema' ? 'cyclic' : 'inline'
+    const referenceModel = useCyclicModel(type) ? 'cyclic' : 'inline'
     const model = Codegen.TypeScriptToModel.Generate(typescript, referenceModel)
     if (type === 'arktype') return Codegen.ModelToArkType.Generate(model)
+    if (type === 'expression') return Codegen.ModelToExpr.Generate(model)
     if (type === 'iots') return Codegen.ModelToIoTs.Generate(model)
-    if (type === 'jsonschema') return Codegen.ModelToJsonSchema.Generate(model)
     if (type === 'javascript') return Codegen.ModelToJavaScript.Generate(model)
+    if (type === 'jsonschema') return Codegen.ModelToJsonSchema.Generate(model)
     if (type === 'typebox') return Codegen.TypeScriptToTypeBox.Generate(typescript)
     if (type === 'typescript') return Codegen.ModelToTypeScript.Generate(model)
     if (type === 'value') return Codegen.ModelToValue.Generate(model)
     if (type === 'yup') return Codegen.ModelToYup.Generate(model)
     if (type === 'zod') return Codegen.ModelToZod.Generate(model)
-    if (type === 'expr') return Codegen.ModelToExpr.Generate(model)
     return ''
   }
   function resolveTransform(type: TransformType, typescript: string): string {
@@ -126,31 +129,19 @@ export function Editor(props: EditorProperties) {
     return type === state ? `${type} control selected` : `${type} control`
   }
   function getTransformLabel(type: TransformType) {
-    switch (type) {
-      case 'arktype':
-        return 'ArkType'
-      case 'expr':
-        return 'Expression'
-      case 'iots':
-        return 'io-ts'
-      case 'javascript':
-        return 'JavaScript'
-      case 'jsonschema':
-        return 'Json Schema'
-      case 'value':
-        return 'Value'
-      case 'typebox':
-        return 'TypeBox'
-      case 'typescript':
-        return 'TypeScript'
-      case 'yup':
-        return 'Yup'
-      case 'zod':
-        return 'Zod'
-    }
+    if (type === 'arktype') return 'ArkType'
+    if (type === 'expression') return 'Expression'
+    if (type === 'iots') return 'io-ts'
+    if (type === 'javascript') return 'JavaScript'
+    if (type === 'jsonschema') return 'Json Schema'
+    if (type === 'value') return 'Value'
+    if (type === 'typebox') return 'TypeBox'
+    if (type === 'typescript') return 'TypeScript'
+    if (type === 'yup') return 'Yup'
+    if (type === 'zod') return 'Zod'
   }
   const arktypeControlClassName = getTransformClassName('arktype')
-  const exprControlClassName = getTransformClassName('expr')
+  const expressionControlClassName = getTransformClassName('expression')
   const iotsControlClassName = getTransformClassName('iots')
   const jsonschemaControlClassName = getTransformClassName('jsonschema')
   const javascriptControlClassName = getTransformClassName('javascript')
@@ -159,7 +150,6 @@ export function Editor(props: EditorProperties) {
   const valueControlClassName = getTransformClassName('value')
   const yupControlClassName = getTransformClassName('yup')
   const zodControlClassName = getTransformClassName('zod')
-
   function onTransform(type: TransformType) {
     Storage.setTransformTargetType(type)
     updateTransform()
@@ -183,7 +173,7 @@ export function Editor(props: EditorProperties) {
             <div className={typescriptControlClassName} title="TypeScript Transform" onClick={() => onTransform('typescript')}></div>
             <div className={javascriptControlClassName} title="JavaScript Transform" onClick={() => onTransform('javascript')}></div>
             <div className="control separator" />
-            <div className={exprControlClassName} title="Expr Transform" onClick={() => onTransform('expr')}></div>
+            <div className={expressionControlClassName} title="Expr Transform" onClick={() => onTransform('expression')}></div>
             <div className={jsonschemaControlClassName} title="JSON Schema Transform" onClick={() => onTransform('jsonschema')}></div>
             <div className={valueControlClassName} title="Value Transform" onClick={() => onTransform('value')}></div>
           </div>

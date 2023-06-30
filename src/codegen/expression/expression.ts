@@ -45,6 +45,7 @@ export type TypeOf = 'undefined' | 'symbol' | 'function' | 'string' | 'number' |
 
 export interface ExpressionOptions {
   $id?: string
+  [key: string]: any
 }
 export interface AndExpression extends ExpressionOptions {
   type: 'And'
@@ -91,7 +92,7 @@ export interface IfThenElseExpression extends ExpressionOptions {
   then: Expression
   else: Expression
 }
-export interface InstanceOfExpression<T extends Function = Function> extends ExpressionOptions {
+export interface InstanceOfExpression<T extends string = string> extends ExpressionOptions {
   type: 'InstanceOf'
   value: T
 }
@@ -310,7 +311,7 @@ export namespace Expression {
     return { ...options, type: 'Index', index, expr: expression }
   }
   /** Creates a `InstanceOf` expression that will apply the `instanceof` operator */
-  export function InstanceOf<T extends Function>(value: T, options: ExpressionOptions = {}): InstanceOfExpression<T> {
+  export function InstanceOf<T extends string>(value: T, options: ExpressionOptions = {}): InstanceOfExpression<T> {
     return { ...options, type: 'InstanceOf', value }
   }
   /** Creates a `IsArray` expression that will check a value as an array */

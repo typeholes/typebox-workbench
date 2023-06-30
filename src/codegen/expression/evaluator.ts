@@ -74,7 +74,7 @@ export namespace ExpressionEvaluator {
     return Visit(expression.if, value) ? Visit(expression.then, value) : Visit(expression.else, value)
   }
   function InstanceOf(expression: Expr.InstanceOfExpression, value: unknown): boolean {
-    return value instanceof expression.value
+    return value instanceof (globalThis as any)[expression.value]
   }
   function IsArray(expression: Expr.IsArrayExpression, value: unknown[]): boolean {
     return globalThis.Array.isArray(value)

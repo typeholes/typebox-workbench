@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export type TransformType = 'typebox' | 'jsonschema' | 'javascript' | 'typescript' | 'value' | 'zod' | 'arktype' | 'iots' | 'yup' | 'expr'
+export type TransformType = 'arktype' | 'expression' | 'iots' | 'javascript' | 'jsonschema' | 'typebox' | 'typescript' | 'value' | 'yup' | 'zod'
 
 export namespace Storage {
   // prettier-ignore

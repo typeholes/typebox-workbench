@@ -134,7 +134,7 @@ export namespace ExpressionCompiler {
     return Visit(expression.expr, `${value}[${expression.index}]`)
   }
   function InstanceOf(expression: Expr.InstanceOfExpression, value: string): string {
-    return `${value} instanceof ${SetExtern(expression.value)}`
+    return `${value} instanceof ${expression.value}`
   }
   function IsArray(expression: Expr.IsArrayExpression, value: string): string {
     return `Array.isArray(${value})`
