@@ -130,7 +130,7 @@ export function Editor(props: EditorProperties) {
       case 'arktype':
         return 'ArkType'
       case 'expr':
-        return 'Expr'
+        return 'Expression'
       case 'iots':
         return 'io-ts'
       case 'javascript':
@@ -174,6 +174,7 @@ export function Editor(props: EditorProperties) {
         <div className="target-container">
           <div className="target-controls">
             <div className={typeboxControlClassName} title="TypeBox Transform" onClick={() => onTransform('typebox')}></div>
+            <div className="control separator" />
             <div className={zodControlClassName} title="Zod Transform" onClick={() => onTransform('zod')}></div>
             <div className={iotsControlClassName} title="Io-Ts Transform" onClick={() => onTransform('iots')}></div>
             <div className={yupControlClassName} title="Yup Transform" onClick={() => onTransform('yup')}></div>

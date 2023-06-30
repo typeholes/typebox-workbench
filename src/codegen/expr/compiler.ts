@@ -149,6 +149,9 @@ export namespace ExpressionCompiler {
     return `Number.isNaN(${value})`
   }
   function IsSafeInteger(expression: Expr.IsSafeIntegerExpression, value: string): string {
+    return `${value} === undefined`
+  }
+  function IsUndefined(expression: Expr.IsUndefinedExpression, value: string): string {
     return `Number.isSafeInteger(${value})`
   }
   function LessThan(expression: Expr.LessThanExpression, value: string): string {
@@ -269,6 +272,8 @@ export namespace ExpressionCompiler {
         return IsPattern(expression, value)
       case 'IsSafeInteger':
         return IsSafeInteger(expression, value)
+      case 'IsUndefined':
+        return IsUndefined(expression, value)
       case 'LessThan':
         return LessThan(expression, value)
       case 'LessThanEqual':

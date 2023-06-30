@@ -124,7 +124,9 @@ export interface IsSafeIntegerExpression extends ExpressionOptions {
 export interface IsObjectExpression extends TypeOfExpression<'object'> {}
 export interface IsStringExpression extends TypeOfExpression<'string'> {}
 export interface IsSymbolExpression extends TypeOfExpression<'symbol'> {}
-export interface IsUndefinedExpression extends EqualsExpression<undefined> {}
+export interface IsUndefinedExpression extends ExpressionOptions {
+  type: 'IsUndefined'
+}
 export interface KeyInExpression<T extends string = string> extends ExpressionOptions {
   type: 'KeyIn'
   value: T
@@ -232,10 +234,10 @@ export type Expression =
   | IsFunctionExpression
   | IsNullExpression
   | IsNumberExpression
-  | IsUndefinedExpression
   | IsSafeIntegerExpression
   | IsStringExpression
   | IsSymbolExpression
+  | IsUndefinedExpression
   | KeyInExpression
   | LessThanEqualExpression
   | LessThanExpression
@@ -361,7 +363,7 @@ export namespace Expression {
   }
   /** Creates a `IsUndefined` expression that will check a value is undefined */
   export function IsUndefined(options: ExpressionOptions = {}): IsUndefinedExpression {
-    return Expression.Equals(undefined, options)
+    return { ...options, type: 'IsUndefined' }
   }
   /** Creates a `IsNull` expression that will check a value is null */
   export function IsNull(options: ExpressionOptions = {}): IsNullExpression {

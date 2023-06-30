@@ -47,7 +47,7 @@ export function AppHeader() {
         <p>TypeScript To Runtime Type System Transform Tool</p>
       </div>
       <div className="right">
-        <a href="https://github.com/sinclairzx81/typebox">
+        <a href="https://github.com/sinclairzx81/typebox-workbench" target="_blank">
           <img src="assets/images/github.png" />
         </a>
       </div>

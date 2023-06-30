@@ -99,6 +99,9 @@ export namespace ExpressionErrors {
   function IsSafeInteger(expression: Expr.IsSafeIntegerExpression, path: string, value: number): boolean {
     return globalThis.Number.isSafeInteger(value)
   }
+  function IsUndefined(expression: Expr.IsUndefinedExpression, path: string, value: number): boolean {
+    return value === undefined
+  }
   function LessThan(expression: Expr.LessThanExpression, path: string, value: number): boolean {
     return value < expression.value
   }
@@ -206,6 +209,8 @@ export namespace ExpressionErrors {
         return IsPattern(expression, path, value)
       case 'IsSafeInteger':
         return IsSafeInteger(expression, path, value)
+      case 'IsUndefined':
+        return IsUndefined(expression, path, value)
       case 'Not':
         return Not(expression, path, value)
       case 'Or':
