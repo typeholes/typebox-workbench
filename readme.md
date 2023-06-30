@@ -1,7 +1,9 @@
 <div align='center'>
 
 <h1>TypeBox Workbench</h1>
-	
+
+<p>TypeScript To Runtime Type System Transform Tool</p>
+
 <a href="https://sinclairzx81.github.io/typebox-workbench/"><img src="workbench.png" /></a>
 
 </div>
