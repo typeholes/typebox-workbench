@@ -267,8 +267,11 @@ export type Expression =
 /** Type Expressions builder used to assert JavaScript values */
 export namespace Expression {
   /** Creates a `And` expression where each sub expression is evaluated in sequence */
-  export function And<E extends Expression>(expressions: (() => Generator<E>) | Array<E>, options: ExpressionOptions = {}): AndExpression {
-    return !globalThis.Array.isArray(expressions) ? { ...options, type: 'And', expr: [...expressions()] } : { ...options, type: 'And', expr: expressions }
+  export function And<E extends Expression>(expressions: (() => Generator<E>) | Array<E>, options: ExpressionOptions = {}): Expression {
+    const expr = globalThis.Array.isArray(expressions) ? expressions : [...expressions()]
+    if (expr.length === 0) return Expression.False()
+    if (expr.length === 1) return expr[0]
+    return { ...options, type: 'And', expr }
   }
   /** Creates a `Call` expression that will invoke the object target and check the return for the given sub expression */
   export function Call<E extends Expression, T extends string, P extends unknown[]>(target: T, parameters: P, expression: E, options: ExpressionOptions = {}): CallExpression<E, T, P> {
@@ -395,8 +398,11 @@ export namespace Expression {
     return { ...options, type: 'Not', expr: expression }
   }
   /** Creates a `Or` expression where each sub expression is evaluated in sequence */
-  export function Or<E extends Expression>(expressions: (() => Generator<E>) | Array<E>, options: ExpressionOptions = {}): OrExpression {
-    return !globalThis.Array.isArray(expressions) ? { ...options, type: 'Or', expr: [...expressions()] } : { ...options, type: 'Or', expr: expressions }
+  export function Or<E extends Expression>(expressions: (() => Generator<E>) | Array<E>, options: ExpressionOptions = {}): Expression {
+    const expr = globalThis.Array.isArray(expressions) ? expressions : [...expressions()]
+    if (expr.length === 0) return Expression.False()
+    if (expr.length === 1) return expr[0]
+    return { ...options, type: 'Or', expr }
   }
   /** Creates a `PropertiesExcludePattern` expression that will enumerate each key matching the given regular expression */
   export function PropertiesExcludePattern<E extends Expression>(pattern: string, expression: E, options: ExpressionOptions = {}): PropertiesExcludePatternExpression<E> {

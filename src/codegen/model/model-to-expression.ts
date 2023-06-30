@@ -129,12 +129,7 @@ export namespace TypeBoxToExpression {
     )
   }
   function Literal(schema: Types.TLiteral, references: Types.TSchema[]): Expression {
-    return Expression.And(
-      function* () {
-        yield Expression.Equals(schema.const)
-      },
-      { $id: schema.$id },
-    )
+    return Expression.Equals(schema.const, { $id: schema.$id })
   }
   function Never(schema: Types.TNever, references: Types.TSchema[]): Expression {
     return Expression.False({ $id: schema.$id })
@@ -285,20 +280,10 @@ export namespace TypeBoxToExpression {
     )
   }
   function Unknown(schema: Types.TUnknown, references: Types.TSchema[]): Expression {
-    return Expression.And(
-      function* () {
-        yield Expression.True({ $id: schema.$id })
-      },
-      { $id: schema.$id },
-    )
+    return Expression.True({ $id: schema.$id })
   }
   function Void(schema: Types.TVoid, references: Types.TSchema[]): Expression {
-    return Expression.And(
-      function* () {
-        yield Expression.IsNull({ $id: schema.$id })
-      },
-      { $id: schema.$id },
-    )
+    return Expression.IsUndefined({ $id: schema.$id })
   }
   function Unresolved(schema: Types.TSchema, references: Types.TSchema[]): Expression {
     return Expression.False({ unresolved: schema })
