@@ -108,8 +108,8 @@ export function Editor(props: EditorProperties) {
       console.log(error)
       // todo: better error reporting
       const current = targetEditor.current!.getValue()
-      const updated = current.indexOf('// [transform-error]') === 0 ? current.split('\n').slice(1).join('\n') : current
-      const message = `// [transform-error]`
+      const updated = current.indexOf(`// [${type}: transform-error]`) === 0 ? current.split('\n').slice(1).join('\n') : current
+      const message = `// [${type}: transform-error]`
       return [message, updated].join('\n')
     }
   }
@@ -125,12 +125,12 @@ export function Editor(props: EditorProperties) {
       console.log(error)
     }
   }
-  function getTransformClassName(type: TransformType) {
+  function getControlsButtonClassName(type: TransformType) {
     return type === state ? `${type} control selected` : `${type} control`
   }
   function getTransformLabel(type: TransformType) {
     if (type === 'arktype') return 'ArkType'
-    if (type === 'expression') return 'Expression'
+    if (type === 'expression') return 'Type Expression'
     if (type === 'iots') return 'io-ts'
     if (type === 'javascript') return 'JavaScript'
     if (type === 'jsonschema') return 'Json Schema'
@@ -140,17 +140,19 @@ export function Editor(props: EditorProperties) {
     if (type === 'yup') return 'Yup'
     if (type === 'zod') return 'Zod'
   }
-  const arktypeControlClassName = getTransformClassName('arktype')
-  const expressionControlClassName = getTransformClassName('expression')
-  const iotsControlClassName = getTransformClassName('iots')
-  const jsonschemaControlClassName = getTransformClassName('jsonschema')
-  const javascriptControlClassName = getTransformClassName('javascript')
-  const typeboxControlClassName = getTransformClassName('typebox')
-  const typescriptControlClassName = getTransformClassName('typescript')
-  const valueControlClassName = getTransformClassName('value')
-  const yupControlClassName = getTransformClassName('yup')
-  const zodControlClassName = getTransformClassName('zod')
+  const arktypeControlClassName = getControlsButtonClassName('arktype')
+  const expressionControlClassName = getControlsButtonClassName('expression')
+  const iotsControlClassName = getControlsButtonClassName('iots')
+  const jsonschemaControlClassName = getControlsButtonClassName('jsonschema')
+  const javascriptControlClassName = getControlsButtonClassName('javascript')
+  const typeboxControlClassName = getControlsButtonClassName('typebox')
+  const typescriptControlClassName = getControlsButtonClassName('typescript')
+  const valueControlClassName = getControlsButtonClassName('value')
+  const yupControlClassName = getControlsButtonClassName('yup')
+  const zodControlClassName = getControlsButtonClassName('zod')
+
   function onTransform(type: TransformType) {
+    targetEditor.current!.setValue('')
     Storage.setTransformTargetType(type)
     updateTransform()
     setState(type)

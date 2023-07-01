@@ -33,7 +33,7 @@ export namespace Storage {
   const defaultCode = [
     `// Edit TypeScript Types Here. Use Ctrl + S to Share`, 
     '', 
-    `export interface Vector {`, 
+    `export type T = {`, 
     `  /**`,
     `   * @minimum 0`,
     `   * @maximum 1`,

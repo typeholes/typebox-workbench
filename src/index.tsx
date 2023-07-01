@@ -44,7 +44,7 @@ export function AppHeader() {
       </div>
       <div className="middle">
         <h2>TypeBox WorkBench</h2>
-        <p>TypeScript To Runtime Type System Transform Tool</p>
+        <p>TypeScript Transform Tool for Runtime Type Systems</p>
       </div>
       <div className="right">
         <a href="https://github.com/sinclairzx81/typebox-workbench" target="_blank">
@@ -64,7 +64,13 @@ function AppBody() {
 function AppFooter() {
   return (
     <div className="footer">
-      <span></span>
+      <span>
+        Sinclair |{' '}
+        <a href="https://github.com/sinclairzx81/typebox" target="_blank">
+          TypeBox
+        </a>{' '}
+        {new Date().getFullYear()}
+      </span>
     </div>
   )
 }
