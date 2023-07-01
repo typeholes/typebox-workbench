@@ -65,7 +65,6 @@ function AppFooter() {
   return (
     <div className="footer">
       <span>
-        Sinclair |{' '}
         <a href="https://github.com/sinclairzx81/typebox" target="_blank">
           TypeBox
         </a>{' '}
