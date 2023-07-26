@@ -1,5 +1,6 @@
 {
-  "scripts": {
+    "repository": "https://github.com/typeholes/typebox-workbench",
+    "scripts": {
     "clean": "hammer task clean",
     "format": "hammer task format",
     "start": "hammer task start"
