@@ -14,6 +14,9 @@ import {
    interfaceToType,
    resolveTypeDeps,
    commentOldTypes,
+   onExpandedSelection,
+   QuickInfoResult,
+   getRangeText,
 } from './util';
 import { TypeBoxModel } from '../../src/codegen/model/model';
 
@@ -82,11 +85,37 @@ export async function extractType(
    let namePosition = textEditor.selection.active;
    const offset = textEditor.document.offsetAt(namePosition);
    const file = textEditor.document.fileName;
-   let result = await getQuickInfo(file, offset);
 
-   const { start, length } = result.textSpan;
+   let result: QuickInfoResult = {} as QuickInfoResult;
+   try {
+      result = await getQuickInfo(file, offset);
+   } catch (e) {
+      console.log(e);
+   }
+   if (!result.displayParts) {
+      result = {
+         kind: 'aliasName',
+         displayParts: [
+            {
+               text:
+                  (await onExpandedSelection(
+                     { fileName: file, position: namePosition },
+                     getRangeText
+                  )) ?? 'ERROR_GETTING_TYPE_CODE',
+               kind: 'full type',
+            },
+         ],
+      };
+   }
 
-   const name = textEditor.document.getText().slice(start, start + length);
+   const name = textEditor.document
+      .getText(
+         new vscode.Range(
+            namePosition,
+            new vscode.Position(namePosition.line + 1, 0)
+         )
+      )
+      .replace(/\s|=|{.*/, ''); // textEditor.document.getText().slice(start, start + length);
 
    ({ result, namePosition } = await interfaceToType(
       extract.interfaces2types,

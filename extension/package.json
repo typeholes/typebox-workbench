@@ -3,7 +3,7 @@
   "publisher": "typeholes",
   "displayName": "typebench test",
   "description": "POC for typebench extension",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "repository": "https://github.com/typeholes/typebox-workbench",
   "engines": {
     "vscode": "^1.79.0"
@@ -14,6 +14,7 @@
   "license": "MIT",
   "activationEvents": [],
   "main": "./out/extension.js",
+  "browser": "./out/extension.js",
   "contributes": {
     "configuration": {
       "title": "TypeBench",
@@ -21,12 +22,12 @@
         "TypeBench.extractor.extractors": {
           "default": {
             "ArkType": {
-              "autoUndo": false,
-              "commentOldTypes": true,
-              "extraction": "ArkType",
-              "interfaces2types": true,
+              "autoUndo": true,
+              "commentOldTypes": false,
+              "extraction": "Identity",
+              "interfaces2types": false,
               "language": "typescript",
-              "target": "inplace"
+              "target": "clipboard"
             },
             "IoTs": {
               "autoUndo": false,
